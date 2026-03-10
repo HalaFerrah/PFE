@@ -1,10 +1,11 @@
-import { useNavigate } from "react-router-dom";
+﻿import { useNavigate } from "react-router-dom";
 import Stepper from "../../../components/ui/Stepper";
 import BackNav from "../../../components/ui/BackNav";
 import { useI18n } from "../../../i18n/I18nProvider";
 import { useQuote } from "../QuoteContext";
 
-const OPTIONAL_ITEMS = ["theft", "fire", "natural", "towing", "crew"];
+const MAIN_GUARANTEES = ["g34141a"];
+const COMPLEMENTARY_GUARANTEES = ["g34142a", "g34142b", "g34142c", "g34142d"];
 
 function GuaranteeCalculationPage() {
   const { t } = useI18n();
@@ -12,8 +13,10 @@ function GuaranteeCalculationPage() {
   const navigate = useNavigate();
 
   const durationLabel = quote.duration === "12" ? t.year1 : quote.duration === "6" ? t.months6 : t.months3;
+  const durationFactor = quote.duration === "12" ? 1.8 : quote.duration === "6" ? 1.25 : 1;
   const mandatoryValue = Math.round((quote.amount || 0) * 0.18);
-  const optionalValue = Math.max(0, (quote.estimatedPrice || 0) - Math.round((quote.amount || 0) * (quote.duration === "12" ? 1.8 : quote.duration === "6" ? 1.25 : 1)) - mandatoryValue);
+  const baseWithoutOptional = Math.round((quote.amount || 0) * durationFactor) + mandatoryValue;
+  const optionalValue = Math.max(0, (quote.estimatedPrice || 0) - baseWithoutOptional);
 
   return (
     <section className="page-center">
@@ -37,13 +40,26 @@ function GuaranteeCalculationPage() {
           <h3>{t.mandatoryGuarantee}</h3>
           <label className="guarantee-item mandatory">
             <input type="checkbox" checked readOnly />
-            <span>{t.guarantees.liability}</span>
+            <span>{t.guarantees.fixed}</span>
             <strong>{mandatoryValue} DA</strong>
           </label>
 
-          <h3>{t.optionalGuarantees}</h3>
+          <h3>{t.principalGuarantees}</h3>
           <div className="guarantee-list">
-            {OPTIONAL_ITEMS.map((itemKey) => {
+            {MAIN_GUARANTEES.map((itemKey) => {
+              const isChecked = quote.selectedGuarantees.includes(itemKey);
+              return (
+                <label className="guarantee-item" key={itemKey}>
+                  <input type="checkbox" checked={isChecked} onChange={() => toggleGuarantee(itemKey)} />
+                  <span>{t.guarantees[itemKey]}</span>
+                </label>
+              );
+            })}
+          </div>
+
+          <h3>{t.complementaryGuarantees}</h3>
+          <div className="guarantee-list">
+            {COMPLEMENTARY_GUARANTEES.map((itemKey) => {
               const isChecked = quote.selectedGuarantees.includes(itemKey);
               return (
                 <label className="guarantee-item" key={itemKey}>

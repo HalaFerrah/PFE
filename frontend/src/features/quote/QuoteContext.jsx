@@ -1,13 +1,13 @@
-import { createContext, useContext, useMemo, useState } from "react";
+﻿import { createContext, useContext, useMemo, useState } from "react";
 
 const QuoteContext = createContext(null);
 
 const OPTIONAL_GUARANTEE_RATES = {
-  theft: 0.08,
-  fire: 0.06,
-  natural: 0.07,
-  towing: 0.04,
-  crew: 0.05
+  g34141a: 0.09,
+  g34142a: 0.03,
+  g34142b: 0.025,
+  g34142c: 0.04,
+  g34142d: 0.03
 };
 
 const initialState = {
@@ -28,14 +28,16 @@ const initialState = {
 };
 
 export function calculateAmount(data) {
-  const power = Number(data.power || 0) * 2.5;
-  const tonnage = Number(data.grossTonnage || 0) * 5.2;
-  const length = Number(data.length || 0) * 35;
-  const width = Number(data.width || 0) * 22;
-  const agePenalty = data.yearConstruction ? Math.max(0, new Date().getFullYear() - Number(data.yearConstruction)) * 1.4 : 0;
-  const typeFactor = data.type === "yacht" ? 1.35 : data.type === "motorboat" ? 1.2 : 1.08;
+  const power = Number(data.power || 0) * 2.2;
+  const tonnage = Number(data.grossTonnage || 0) * 5.8;
+  const length = Number(data.length || 0) * 32;
+  const width = Number(data.width || 0) * 20;
+  const agePenalty = data.yearConstruction
+    ? Math.max(0, new Date().getFullYear() - Number(data.yearConstruction)) * 1.6
+    : 0;
+  const typeFactor = data.type === "motor" ? 1.2 : 1.06;
 
-  const raw = (850 + power + tonnage + length + width + agePenalty) * typeFactor;
+  const raw = (900 + power + tonnage + length + width + agePenalty) * typeFactor;
   return Math.max(0, Math.round(raw));
 }
 

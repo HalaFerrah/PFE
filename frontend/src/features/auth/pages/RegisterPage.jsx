@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BackNav from "../../../components/ui/BackNav";
 import { useI18n } from "../../../i18n/I18nProvider";
@@ -8,9 +8,12 @@ import { createBoat, register } from "../../../api/client";
 function toBackendMaterial(material) {
   if (material === "steel") return "steel";
   if (material === "wood") return "wood";
-  if (material === "aluminium") return "polyester";
-  if (material === "composite") return "polyester";
+  if (material === "pneumatic") return "inflatable";
   return "polyester";
+}
+
+function toBackendType(type) {
+  return type === "sail" ? "sailboat" : "motorboat";
 }
 
 function RegisterPage() {
@@ -63,7 +66,7 @@ function RegisterPage() {
 
       await createBoat(registerData.token, {
         boat_name: quote.boatName || "Boat",
-        boat_type: quote.type === "yacht" ? "motorboat" : quote.type || "motorboat",
+        boat_type: toBackendType(quote.type),
         engine_power_hp: Number(quote.power || 0),
         construction_year: Number(quote.yearConstruction || 2020),
         construction_materials: toBackendMaterial(quote.material),
@@ -75,7 +78,7 @@ function RegisterPage() {
         home_port: "Alger"
       });
 
-      navigate("/payment");
+      navigate("/account");
     } catch (err) {
       setError(err.message);
     } finally {

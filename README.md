@@ -1,62 +1,26 @@
-﻿# PFE - Boat Assurance (React)
+# PFE Repository
 
-This project is a React + Vite implementation of your graduation project UI for boat assurance.
+This repository is split into two clear applications:
 
-## What is included
+- `frontend/`: React + Vite web client
+- `backend/`: Express + MySQL API
 
-- Pixel-focused UI based on the 3 provided screenshots.
-- Step 1: Insurance Duration
-- Step 2: Boat Details
-- Step 3: Guarantee & Calculation
-- Anonymous tester flow for first 3 steps.
-- Registration page after calculation (before payment).
-- Payment placeholder page.
-- Language switch button EN <-> FR.
+## Run from root
 
-## Run
+Frontend:
 
 ```bash
-npm install
-npm run dev
+npm run frontend:dev
 ```
 
-## Simple folder structure
+Backend:
 
-```text
-PFE/
-  public/
-    logo.svg
-  src/
-    components/
-      layout/
-        Header.jsx
-        MainLayout.jsx
-      ui/
-        Stepper.jsx
-    features/
-      quote/
-        QuoteContext.jsx
-        pages/
-          InsuranceDurationPage.jsx
-          BoatDetailsPage.jsx
-          GuaranteeCalculationPage.jsx
-      auth/
-        pages/
-          RegisterPage.jsx
-      payment/
-        pages/
-          PaymentPage.jsx
-    i18n/
-      I18nProvider.jsx
-      translations.js
-    router/
-      AppRouter.jsx
-    styles/
-      global.css
-    App.jsx
-    main.jsx
-  index.html
-  package.json
-  vite.config.js
-  PERFECT_PROMPT.md
+```bash
+npm run backend:start
+```
+
+## Build frontend
+
+```bash
+npm run frontend:build
 ```

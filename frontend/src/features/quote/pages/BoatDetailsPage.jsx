@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Stepper from "../../../components/ui/Stepper";
 import BackNav from "../../../components/ui/BackNav";
@@ -51,13 +51,13 @@ function BoatDetailsPage() {
           placeholder={t.boatName}
           value={quote.boatName}
           onChange={(e) => handleChange("boatName", e.target.value)}
+          required
         />
 
-        <select className="input" value={quote.type} onChange={(e) => handleChange("type", e.target.value)}>
+        <select className="input" value={quote.type} onChange={(e) => handleChange("type", e.target.value)} required>
           <option value="">{t.type}</option>
-          <option value="sailboat">Sailboat</option>
-          <option value="motorboat">Motorboat</option>
-          <option value="yacht">Yacht</option>
+          <option value="sail">{t.boatTypes.sail}</option>
+          <option value="motor">{t.boatTypes.motor}</option>
         </select>
 
         <div className="inline-row">
@@ -66,8 +66,10 @@ function BoatDetailsPage() {
             className="input input-small"
             type="number"
             min="0"
+            step="1"
             value={quote.power}
             onChange={(e) => handleChange("power", e.target.value)}
+            required
           />
         </div>
 
@@ -78,17 +80,19 @@ function BoatDetailsPage() {
             type="number"
             min="1950"
             max="2100"
+            step="1"
             value={quote.yearConstruction}
             onChange={(e) => handleChange("yearConstruction", e.target.value)}
+            required
           />
         </div>
 
-        <select className="input" value={quote.material} onChange={(e) => handleChange("material", e.target.value)}>
+        <select className="input" value={quote.material} onChange={(e) => handleChange("material", e.target.value)} required>
           <option value="">{t.material}</option>
-          <option value="wood">Wood</option>
-          <option value="steel">Steel</option>
-          <option value="aluminium">Aluminium</option>
-          <option value="composite">Composite</option>
+          <option value="steel">{t.materials.steel}</option>
+          <option value="wood">{t.materials.wood}</option>
+          <option value="polystyrene">{t.materials.polystyrene}</option>
+          <option value="pneumatic">{t.materials.pneumatic}</option>
         </select>
 
         <div className="inline-row">
@@ -97,8 +101,10 @@ function BoatDetailsPage() {
             className="input input-small"
             type="number"
             min="0"
+            step="0.01"
             value={quote.grossTonnage}
             onChange={(e) => handleChange("grossTonnage", e.target.value)}
+            required
           />
         </div>
 
@@ -108,9 +114,10 @@ function BoatDetailsPage() {
             className="input input-small"
             type="number"
             min="0"
-            step="0.1"
+            step="0.01"
             value={quote.length}
             onChange={(e) => handleChange("length", e.target.value)}
+            required
           />
         </div>
 
@@ -120,9 +127,10 @@ function BoatDetailsPage() {
             className="input input-small"
             type="number"
             min="0"
-            step="0.1"
+            step="0.01"
             value={quote.width}
             onChange={(e) => handleChange("width", e.target.value)}
+            required
           />
         </div>
 
