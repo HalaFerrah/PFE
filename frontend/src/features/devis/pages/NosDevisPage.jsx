@@ -23,9 +23,9 @@ function NosDevisPage() {
           </div>
           <div className="institutional-media subtle-accent-panel smooth-panel">
             <div className="process-strip">
-              <div className="process-item smooth-card"><strong>01</strong><span>{t.devisCardText1}</span></div>
-              <div className="process-item smooth-card"><strong>02</strong><span>{t.devisCardText2}</span></div>
-              <div className="process-item smooth-card"><strong>03</strong><span>{t.devisCardText3}</span></div>
+              <div className="process-item smooth-card"><strong>{t.devisCard1}</strong><span>{t.devisCardText1}</span></div>
+              <div className="process-item smooth-card"><strong>{t.devisCard2}</strong><span>{t.devisCardText2}</span></div>
+              <div className="process-item smooth-card"><strong>{t.devisCard3}</strong><span>{t.devisCardText3}</span></div>
             </div>
           </div>
         </section>
@@ -63,17 +63,15 @@ function NosDevisPage() {
       </RevealOnScroll>
 
       <RevealOnScroll delayClass="delay-2">
-        <section className="institutional-split-section">
-          <div className="dashboard-panel institutional-text-panel smooth-panel">
-            <p className="eyebrow">{t.summary}</p>
-            <h2>{t.devisOffer2}</h2>
-            <p>{t.summaryText}</p>
-          </div>
-          <div className="dashboard-panel institutional-text-panel subtle-accent-panel smooth-panel">
-            <p className="eyebrow">{t.secureQuote}</p>
-            <h2>{t.devisOffer1}</h2>
-            <p>{t.createAccountText}</p>
-          </div>
+        <section className="quote-detail-grid">
+          <article className="about-mini-tile smooth-card">
+            <strong>{t.devisNextTitle}</strong>
+            <span>{t.devisNextText}</span>
+          </article>
+          <article className="about-mini-tile smooth-card">
+            <strong>{t.devisAfterTitle}</strong>
+            <span>{t.devisAfterText}</span>
+          </article>
         </section>
       </RevealOnScroll>
     </section>

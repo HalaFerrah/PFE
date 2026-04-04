@@ -71,7 +71,11 @@ export const translations = {
     devisOffer2: "Complete boat quote",
     devisOfferText2: "A complete digital quote with vessel details, guarantees, premium review and continuity toward subscription.",
     devisOffer3: "Institutional presentation",
-    devisOfferText3: "An institutional entry point for visitors who want to understand the service, the insurer and the available digital quote logic.",
+    devisOfferText3: "A guided presentation for visitors who want to understand the insurer, the service and the quote journey before starting.",
+    devisNextTitle: "What the quote collects",
+    devisNextText: "The simulation is built around navigation duration, boat characteristics, insured value and selected guarantees.",
+    devisAfterTitle: "What happens after the simulation",
+    devisAfterText: "Visitors can explore anonymously first. Registration is only needed when they want to save their data and continue toward payment and contract preparation.",
     accountTitle: "My Profile",
     accountSubtitle: "Manage your settings, boats and insurance contracts.",
     accountWelcome: "Welcome",
@@ -269,7 +273,11 @@ export const translations = {
     devisOffer2: "Devis bateau complet",
     devisOfferText2: "Un devis digital complet avec details du navire, garanties, etude de prime et continuite vers la souscription.",
     devisOffer3: "Presentation institutionnelle",
-    devisOfferText3: "Un point d'entree institutionnel pour les visiteurs qui veulent comprendre le service, l'assureur et la logique des devis digitaux.",
+    devisOfferText3: "Une presentation guidee pour les visiteurs qui veulent comprendre l''assureur, le service et le parcours de devis avant de commencer.",
+    devisNextTitle: "Ce que le devis collecte",
+    devisNextText: "La simulation repose sur la duree de navigation, les caracteristiques du bateau, la valeur assuree et les garanties choisies.",
+    devisAfterTitle: "Ce qui se passe apres la simulation",
+    devisAfterText: "Le visiteur peut d''abord explorer anonymement. L''inscription n''intervient que lorsqu''il souhaite enregistrer ses donnees et poursuivre vers le paiement et la preparation du contrat.",
     accountTitle: "Mon Profil",
     accountSubtitle: "Gerez vos parametres, bateaux et contrats d'assurance.",
     accountWelcome: "Bienvenue",
@@ -396,6 +404,9 @@ export const translations = {
     finalCalculation: "Prime totale TTC"
   }
 };
+
+
+
 
 
 

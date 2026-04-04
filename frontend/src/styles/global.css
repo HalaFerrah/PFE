@@ -277,6 +277,7 @@ button, input, select { font: inherit; }
 .about-mini-tile { padding: 20px; border: 1px solid #dde6f0; border-radius: 20px; background: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(247,250,254,0.98) 100%); box-shadow: 0 12px 28px rgba(17, 31, 49, 0.05); text-align: left; display: grid; gap: 10px; }
 .about-mini-tile strong { color: #20324b; font-size: 18px; }
 .about-mini-tile span, .about-mini-tile p { color: #61728a; line-height: 1.65; margin: 0; }
+.quote-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 24px; text-align: left; }
 .about-bottom-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .about-bottom-card { padding: 22px; text-align: left; }
 .about-bottom-card h3 { margin: 0 0 10px; color: #20324b; font-size: 22px; }
@@ -363,6 +364,7 @@ button, input, select { font: inherit; }
   .about-focus-grid,
   .about-bottom-strip,
   .about-mini-grid,
+  .quote-detail-grid,
   .about-stat-stack,
   .inline-row,
   .register-grid,
@@ -404,6 +406,8 @@ button, input, select { font: inherit; }
   .footer-content { width: min(1160px, 100% - 20px); text-align: center; padding: 10px 0; }
   .simple-footer-content { display: grid; gap: 4px; padding: 8px 0; }
 }
+
+
 
 
 
