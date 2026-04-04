@@ -3,10 +3,12 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "frontend:dev": "npm --prefix frontend run dev",
+    "dev": "npm --prefix frontend run dev -- --host 127.0.0.1 --port 5173",
+    "frontend:dev": "npm --prefix frontend run dev -- --host 127.0.0.1 --port 5173",
     "frontend:build": "npm --prefix frontend run build",
     "frontend:preview": "npm --prefix frontend run preview",
     "backend:dev": "npm --prefix backend run dev",
-    "backend:start": "npm --prefix backend run start"
+    "backend:start": "npm --prefix backend run start",
+    "start": "npm --prefix backend run start"
   }
 }

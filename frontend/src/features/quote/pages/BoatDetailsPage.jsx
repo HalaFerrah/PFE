@@ -1,9 +1,17 @@
-﻿import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Stepper from "../../../components/ui/Stepper";
 import BackNav from "../../../components/ui/BackNav";
 import { useI18n } from "../../../i18n/I18nProvider";
-import { calculateAmount, useQuote } from "../QuoteContext";
+import { useQuote } from "../QuoteContext";
+
+const photoFields = [
+  "photo_main",
+  "photo_front",
+  "photo_rear",
+  "photo_interior",
+  "photo_engine",
+  "photo_hull"
+];
 
 function BoatDetailsPage() {
   const { t } = useI18n();
@@ -14,12 +22,9 @@ function BoatDetailsPage() {
     updateQuote({ [key]: value });
   };
 
-  useEffect(() => {
-    const computedAmount = calculateAmount(quote);
-    if (computedAmount !== quote.amount) {
-      updateQuote({ amount: computedAmount });
-    }
-  }, [quote.type, quote.power, quote.yearConstruction, quote.material, quote.grossTonnage, quote.length, quote.width]);
+  const handleFileChange = (key, file) => {
+    updateQuote({ [key]: file || null });
+  };
 
   const onNext = (event) => {
     event.preventDefault();
@@ -45,6 +50,18 @@ function BoatDetailsPage() {
         </h2>
         <p className="card-subheading">{t.descCardSubtitle}</p>
 
+        <div className="inline-row">
+          <label>{t.boatId}</label>
+          <input
+            className="input input-small"
+            type="text"
+            placeholder={t.boatId}
+            value={quote.boatId}
+            onChange={(e) => handleChange("boatId", e.target.value)}
+            required
+          />
+        </div>
+
         <input
           className="input"
           type="text"
@@ -54,11 +71,14 @@ function BoatDetailsPage() {
           required
         />
 
-        <select className="input" value={quote.type} onChange={(e) => handleChange("type", e.target.value)} required>
-          <option value="">{t.type}</option>
-          <option value="sail">{t.boatTypes.sail}</option>
-          <option value="motor">{t.boatTypes.motor}</option>
-        </select>
+        <div className="floating-select">
+          {!quote.type ? <span className="select-holder">{t.type}</span> : null}
+          <select className="input floating-select-input" value={quote.type} onChange={(e) => handleChange("type", e.target.value)} required>
+            <option value="" disabled hidden></option>
+            <option value="sail">{t.boatTypes.sail}</option>
+            <option value="motor">{t.boatTypes.motor}</option>
+          </select>
+        </div>
 
         <div className="inline-row">
           <label>{t.power}</label>
@@ -87,13 +107,16 @@ function BoatDetailsPage() {
           />
         </div>
 
-        <select className="input" value={quote.material} onChange={(e) => handleChange("material", e.target.value)} required>
-          <option value="">{t.material}</option>
-          <option value="steel">{t.materials.steel}</option>
-          <option value="wood">{t.materials.wood}</option>
-          <option value="polystyrene">{t.materials.polystyrene}</option>
-          <option value="pneumatic">{t.materials.pneumatic}</option>
-        </select>
+        <div className="floating-select">
+          {!quote.material ? <span className="select-holder">{t.material}</span> : null}
+          <select className="input floating-select-input" value={quote.material} onChange={(e) => handleChange("material", e.target.value)} required>
+            <option value="" disabled hidden></option>
+            <option value="steel">{t.materials.steel}</option>
+            <option value="wood">{t.materials.wood}</option>
+            <option value="polystyrene">{t.materials.polystyrene}</option>
+            <option value="pneumatic">{t.materials.pneumatic}</option>
+          </select>
+        </div>
 
         <div className="inline-row">
           <label>{t.grossTonnage}</label>
@@ -136,7 +159,32 @@ function BoatDetailsPage() {
 
         <div className="inline-row amount-row">
           <label>{t.amount}</label>
-          <input className="input input-small amount-input" type="text" value={`${quote.amount || 0} DA`} readOnly />
+          <input
+            className="input input-small amount-input"
+            type="number"
+            min="0"
+            step="0.01"
+            value={quote.amount}
+            onChange={(e) => handleChange("amount", e.target.value)}
+            placeholder="00 DA"
+            required
+          />
+        </div>
+
+        <div className="upload-section">
+          <div className="upload-section-header">
+            <h3>{t.boatPhotos}</h3>
+            <p>{t.boatPhotosText}</p>
+          </div>
+          <div className="upload-grid">
+            {photoFields.map((field) => (
+              <label key={field} className="upload-card">
+                <span className="upload-label">{t.photoLabels[field]}</span>
+                <input type="file" accept="image/*" onChange={(e) => handleFileChange(field, e.target.files?.[0])} />
+                {quote[field]?.name ? <span className="upload-file-name">{quote[field].name}</span> : null}
+              </label>
+            ))}
+          </div>
         </div>
 
         <div className="cta-row">

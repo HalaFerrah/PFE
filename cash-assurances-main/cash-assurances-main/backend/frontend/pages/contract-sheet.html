@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>CASH Assurances — Contrat</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<header class="main-header no-print">
+  <div class="header-inner">
+    <div class="logo">CASH <span>Assurances</span></div>
+  </div>
+</header>
+
+<div style="max-width:800px;margin:0 auto;padding:20px 24px">
+
+  <!-- Boutons actions -->
+  <div class="sheet-actions no-print">
+    <button class="btn-back"  onclick="history.back()">← Retour</button>
+    <button class="btn-print" onclick="window.print()">🖨️ Imprimer</button>
+    <button class="btn-pdf"   onclick="downloadPDF()">📄 Télécharger PDF</button>
+  </div>
+
+  <!-- FEUILLE DU CONTRAT -->
+  <div class="contract-sheet" id="contract-sheet">
+
+    <!-- En-tête -->
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-logo">CASH</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Compagnie d'Assurances des Hydrocarbures</div>
+        <div style="font-size:11px;color:var(--muted)">02 Rue Didouche Mourad, Alger</div>
+      </div>
+      <div class="sheet-title">
+        <h2>CONTRAT D'ASSURANCE</h2>
+        <div style="font-size:13px;color:var(--muted)">Bateau de Plaisance — Produit 3414</div>
+        <div class="policy-num" id="s-policy-number" style="font-size:15px;font-weight:700;color:var(--blue);margin-top:6px"></div>
+      </div>
+    </div>
+
+    <!-- Section 1 : Infos client -->
+    <div class="sheet-section">
+      <h3>Informations du souscripteur</h3>
+      <div class="sheet-row"><span>Nom complet</span><span id="s-fullname"></span></div>
+      <div class="sheet-row"><span>Email</span><span id="s-email"></span></div>
+      <div class="sheet-row"><span>Téléphone</span><span id="s-phone"></span></div>
+      <div class="sheet-row"><span>Adresse</span><span id="s-address"></span></div>
+      <div class="sheet-row"><span>Wilaya</span><span id="s-wilaya"></span></div>
+    </div>
+
+    <!-- Section 2 : Période -->
+    <div class="sheet-section">
+      <h3>Période d'assurance</h3>
+      <div class="sheet-row"><span>Date d'effet</span><span id="s-start"></span></div>
+      <div class="sheet-row"><span>Date d'échéance</span><span id="s-end"></span></div>
+      <div class="sheet-row"><span>Durée</span><span id="s-duration"></span></div>
+    </div>
+
+    <!-- Section 3 : Description navire -->
+    <div class="sheet-section">
+      <h3>Description du navire assuré</h3>
+      <div class="sheet-row"><span>Nom du navire</span><span id="s-boatname"></span></div>
+      <div class="sheet-row"><span>Type</span><span id="s-boattype"></span></div>
+      <div class="sheet-row"><span>Année de construction</span><span id="s-year"></span></div>
+      <div class="sheet-row"><span>Matériaux</span><span id="s-mat"></span></div>
+      <div class="sheet-row"><span>Puissance moteur</span><span id="s-hp"></span></div>
+      <div class="sheet-row"><span>Longueur × Largeur</span><span id="s-dims"></span></div>
+      <div class="sheet-row"><span>Jauge brute</span><span id="s-tonnage"></span></div>
+      <div class="sheet-row"><span>Numéro d'immatriculation</span><span id="s-reg"></span></div>
+      <div class="sheet-row"><span>Port d'attache</span><span id="s-port"></span></div>
+      <div class="sheet-row"><span>Valeur assurée (VTA)</span><span id="s-tiv"></span></div>
+    </div>
+
+    <!-- Section 4 : Garanties -->
+    <div class="sheet-section">
+      <h3>Liste des garanties</h3>
+      <table class="sheet-guarantees">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Désignation</th>
+            <th>Type</th>
+            <th>Taux</th>
+            <th>Prime (DA)</th>
+          </tr>
+        </thead>
+        <tbody id="s-guarantees"></tbody>
+      </table>
+    </div>
+
+    <!-- Section 5 : Total général -->
+    <div class="sheet-total-box">
+      <h3 style="font-size:13px;color:var(--sky);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Total général</h3>
+      <div class="total-row"><span>Prime nette</span><strong id="t-net"></strong></div>
+      <div class="total-row"><span>Coût de police</span><strong id="t-police">500,00 DA</strong></div>
+      <div class="total-row"><span>TVA 19% <small style="color:var(--muted)">(prime nette + coût police) × 19%</small></span><strong id="t-tva"></strong></div>
+      <div class="total-row"><span>Timbre</span><strong id="t-timbre">0,00 DA</strong></div>
+      <div class="total-row grand"><span>TOTAL GÉNÉRAL</span><strong id="t-total"></strong></div>
+    </div>
+
+    <div style="margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:30px;font-size:12px;color:var(--muted)">
+      <div>
+        <div style="font-weight:600;color:var(--text);margin-bottom:8px">Le souscripteur</div>
+        <div style="border-bottom:1px solid #ccc;height:50px;margin-bottom:4px"></div>
+        <div>Signature et cachet</div>
+      </div>
+      <div>
+        <div style="font-weight:600;color:var(--text);margin-bottom:8px">Pour CASH Assurances</div>
+        <div style="border-bottom:1px solid #ccc;height:50px;margin-bottom:4px"></div>
+        <div>Signature et cachet</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API   = 'http://localhost:3000/api';
+const token = localStorage.getItem('token');
+if (!token) window.location.href = 'login.html';
+
+const params     = new URLSearchParams(window.location.search);
+const contractId = params.get('id');
+
+function fmt(n) {
+  return parseFloat(n||0).toLocaleString('fr-DZ',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' DA';
+}
+function fmtDate(d) { return new Date(d).toLocaleDateString('fr-DZ'); }
+function durationLabel(d) {
+  return { '1_year':'1 an', '6_months':'6 mois', '3_months':'3 mois' }[d] || d;
+}
+function boatTypeLabel(t) {
+  return { 'motorboat':'Bateau à moteur', 'sailboat':'Bateau à voile' }[t] || t;
+}
+function materialLabel(m) {
+  return { 'steel':'Acier', 'wood':'Bois', 'polyester':'Polyester', 'inflatable':'Pneumatique' }[m] || m;
+}
+
+async function loadContract() {
+  const res  = await fetch(`${API}/contracts/${contractId}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const data = await res.json();
+  if (!data.success) { alert('Contrat non trouvé'); history.back(); return; }
+  const c = data.data;
+
+  // En-tête
+  document.getElementById('s-policy-number').textContent = 'N° ' + c.policy_number;
+  document.title = 'Contrat ' + c.policy_number + ' — CASH Assurances';
+
+  // Client
+  document.getElementById('s-fullname').textContent = c.first_name + ' ' + c.last_name;
+  document.getElementById('s-email').textContent    = c.email;
+  document.getElementById('s-phone').textContent    = c.phone_number;
+  document.getElementById('s-address').textContent  = c.address + ', ' + c.wilaya;
+  document.getElementById('s-wilaya').textContent   = c.wilaya + ' — ' + c.postal_code;
+
+  // Période
+  document.getElementById('s-start').textContent    = fmtDate(c.start_date);
+  document.getElementById('s-end').textContent      = fmtDate(c.end_date);
+  document.getElementById('s-duration').textContent = durationLabel(c.contract_duration);
+
+  // Navire
+  document.getElementById('s-boatname').textContent = c.boat_name;
+  document.getElementById('s-boattype').textContent = boatTypeLabel(c.boat_type);
+  document.getElementById('s-year').textContent     = c.construction_year;
+  document.getElementById('s-mat').textContent      = materialLabel(c.construction_materials);
+  document.getElementById('s-hp').textContent       = c.engine_power_hp + ' CV';
+  document.getElementById('s-dims').textContent     = c.length_m + ' m × ' + c.beam_width_m + ' m';
+  document.getElementById('s-tonnage').textContent  = c.gross_tonnage + ' Tx';
+  document.getElementById('s-reg').textContent      = c.registration_number || '—';
+  document.getElementById('s-port').textContent     = c.home_port || '—';
+  document.getElementById('s-tiv').textContent      = fmt(c.tiv);
+
+  // Garanties
+  const tbody = document.getElementById('s-guarantees');
+  tbody.innerHTML = (c.guarantees || []).map(g => `
+    <tr>
+      <td><strong>${g.guarantee_code}</strong></td>
+      <td>${g.label}</td>
+      <td>${g.guarantee_type === 'main' ? '🔵 Principale' : '🟣 Complémentaire'}</td>
+      <td>${(parseFloat(g.applied_rate)*100).toFixed(3)}%</td>
+      <td style="font-weight:600">${fmt(g.calculated_premium)}</td>
+    </tr>
+  `).join('');
+
+  // Totaux
+  const primeNette  = parseFloat(c.adjusted_net_premium);
+  const coutPolice  = parseFloat(c.cout_police || 500);
+  const tva         = parseFloat(c.tva_amount);
+  const timbre      = parseFloat(c.timbre || 0);
+  const totalGeneral= parseFloat(c.total_general);
+
+  document.getElementById('t-net').textContent    = fmt(primeNette);
+  document.getElementById('t-police').textContent = fmt(coutPolice);
+  document.getElementById('t-tva').textContent    = fmt(tva);
+  document.getElementById('t-timbre').textContent = fmt(timbre);
+  document.getElementById('t-total').textContent  = fmt(totalGeneral);
+}
+
+async function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  const c = await fetch(`${API}/contracts/${contractId}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  }).then(r => r.json()).then(d => d.data);
+
+  const fmtN = n => parseFloat(n||0).toLocaleString('fr-DZ',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' DA';
+
+  // En-tête
+  doc.setFillColor(27,79,138);
+  doc.rect(0,0,210,28,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(18); doc.setFont('helvetica','bold');
+  doc.text('CASH Assurances', 14, 12);
+  doc.setFontSize(10); doc.setFont('helvetica','normal');
+  doc.text('Compagnie d\'Assurances des Hydrocarbures', 14, 19);
+  doc.text('CONTRAT N° ' + c.policy_number, 140, 12);
+  doc.text('Produit 3414 — Bateau de Plaisance', 140, 19);
+
+  doc.setTextColor(0,0,0);
+  let y = 38;
+
+  function section(title) {
+    doc.setFillColor(214,228,240);
+    doc.rect(14, y-5, 182, 8, 'F');
+    doc.setFontSize(10); doc.setFont('helvetica','bold');
+    doc.setTextColor(27,79,138);
+    doc.text(title, 16, y);
+    doc.setTextColor(0,0,0);
+    y += 8;
+  }
+  function row(label, value) {
+    doc.setFontSize(9); doc.setFont('helvetica','normal');
+    doc.text(label + ' :', 16, y);
+    doc.setFont('helvetica','bold');
+    doc.text(String(value||'—'), 80, y);
+    doc.setFont('helvetica','normal');
+    y += 6;
+  }
+
+  section('SOUSCRIPTEUR');
+  row('Nom complet', c.first_name + ' ' + c.last_name);
+  row('Email', c.email);
+  row('Téléphone', c.phone_number);
+  row('Adresse', c.address + ', ' + c.wilaya);
+
+  y += 4; section('PÉRIODE D\'ASSURANCE');
+  row('Date d\'effet', fmtDate(c.start_date));
+  row('Date d\'échéance', fmtDate(c.end_date));
+  row('Durée', durationLabel(c.contract_duration));
+
+  y += 4; section('NAVIRE ASSURÉ');
+  row('Nom du navire', c.boat_name);
+  row('Type', boatTypeLabel(c.boat_type));
+  row('Année de construction', c.construction_year);
+  row('Matériaux', materialLabel(c.construction_materials));
+  row('Puissance', c.engine_power_hp + ' CV');
+  row('Dimensions', c.length_m + ' m × ' + c.beam_width_m + ' m');
+  row('Valeur assurée (VTA)', fmtN(c.tiv));
+
+  y += 4; section('GARANTIES');
+  (c.guarantees||[]).forEach(g => {
+    row(g.guarantee_code + ' — ' + g.label, fmtN(g.calculated_premium));
+  });
+
+  y += 6;
+  doc.setFillColor(27,79,138);
+  doc.rect(14, y-6, 182, 8, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(10); doc.setFont('helvetica','bold');
+  doc.text('TOTAL GÉNÉRAL', 16, y);
+  doc.setTextColor(0,0,0); y += 8;
+  row('Prime nette', fmtN(c.adjusted_net_premium));
+  row('Coût de police', fmtN(c.cout_police||500));
+  row('TVA (19%)', fmtN(c.tva_amount));
+  row('Timbre', fmtN(c.timbre||0));
+
+  doc.setFillColor(240,247,255);
+  doc.rect(14, y-5, 182, 10, 'F');
+  doc.setFontSize(12); doc.setFont('helvetica','bold');
+  doc.setTextColor(27,79,138);
+  doc.text('TOTAL : ' + fmtN(c.total_general), 16, y+2);
+
+  doc.save('Contrat_' + c.policy_number + '.pdf');
+}
+
+function fmtDate(d) { return new Date(d).toLocaleDateString('fr-DZ'); }
+function durationLabel(d) { return {'1_year':'1 an','6_months':'6 mois','3_months':'3 mois'}[d]||d; }
+function boatTypeLabel(t) { return {'motorboat':'Bateau à moteur','sailboat':'Bateau à voile'}[t]||t; }
+function materialLabel(m) { return {'steel':'Acier','wood':'Bois','polyester':'Polyester','inflatable':'Pneumatique'}[m]||m; }
+
+loadContract();
+</script>
+</body>
+</html>

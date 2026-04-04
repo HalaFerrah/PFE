@@ -1,14 +1,29 @@
-﻿import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nProvider";
 
 function Header() {
   const { t, toggleLanguage } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
+  const user = JSON.parse(localStorage.getItem("cash_user") || "{}");
+  const isLoggedIn = Boolean(user.id);
+  const isAdmin = user.role === "admin" || user.role === "agent";
 
   const isHomeActive = location.pathname === "/home";
+  const isAboutActive = location.pathname === "/qui-sommes-nous";
+  const isQuotesActive = location.pathname === "/nos-devis";
   const isLoginActive = location.pathname === "/login";
   const isTestActive = location.pathname.startsWith("/quote/");
+  const isDashboardActive = location.pathname.startsWith(isAdmin ? "/admin" : "/account") || location.pathname.startsWith("/contracts/");
+
+  const handleLogout = () => {
+    localStorage.removeItem("cash_token");
+    localStorage.removeItem("cash_user");
+    localStorage.removeItem("cash_last_boat_id");
+    localStorage.removeItem("cash_last_contract_id");
+    localStorage.removeItem("cash_quote_snapshot");
+    navigate("/home");
+  };
 
   return (
     <header className="topbar-wrap">
@@ -19,26 +34,31 @@ function Header() {
           </button>
         </div>
 
-        <div className="header-actions premium-actions">
-          <button
-            type="button"
-            className={`header-link home-link ${isHomeActive ? "is-active" : ""}`}
-            onClick={() => navigate("/home")}
-          >
-            <span className="home-icon">⌂</span> {t.home}
+        <div className="header-actions premium-actions nav-rich-actions">
+          <button type="button" className={`header-link ${isHomeActive ? "is-active" : ""}`} onClick={() => navigate("/home")}>
+            {t.home}
           </button>
-          <button
-            type="button"
-            className={`header-link ${isLoginActive ? "is-active" : ""}`}
-            onClick={() => navigate("/login")}
-          >
-            {t.login}
+          <button type="button" className={`header-link ${isAboutActive ? "is-active" : ""}`} onClick={() => navigate("/qui-sommes-nous")}>
+            {t.aboutNav}
           </button>
-          <button
-            type="button"
-            className={`header-pill ${isTestActive ? "is-active" : ""}`}
-            onClick={() => navigate("/quote/duration")}
-          >
+          <button type="button" className={`header-link ${isQuotesActive ? "is-active" : ""}`} onClick={() => navigate("/nos-devis")}>
+            {t.quotesNav}
+          </button>
+          {isLoggedIn ? (
+            <button type="button" className="header-link" onClick={handleLogout}>
+              {t.logout}
+            </button>
+          ) : (
+            <button type="button" className={`header-link ${isLoginActive ? "is-active" : ""}`} onClick={() => navigate("/login")}>
+              {t.login}
+            </button>
+          )}
+          {isLoggedIn ? (
+            <button type="button" className={`header-link ${isDashboardActive ? "is-active" : ""}`} onClick={() => navigate(isAdmin ? "/admin/contracts" : "/account")}>
+              {isAdmin ? t.adminNav : t.profileNav}
+            </button>
+          ) : null}
+          <button type="button" className={`header-pill ${isTestActive ? "is-active" : ""}`} onClick={() => navigate("/quote/duration")}>
             {t.test}
           </button>
           <button type="button" className="lang-btn" onClick={toggleLanguage}>

@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BackNav from "../../../components/ui/BackNav";
 import { useI18n } from "../../../i18n/I18nProvider";
@@ -64,19 +64,39 @@ function RegisterPage() {
       localStorage.setItem("cash_token", registerData.token);
       localStorage.setItem("cash_user", JSON.stringify(registerData.user));
 
-      await createBoat(registerData.token, {
-        boat_name: quote.boatName || "Boat",
-        boat_type: toBackendType(quote.type),
-        engine_power_hp: Number(quote.power || 0),
-        construction_year: Number(quote.yearConstruction || 2020),
-        construction_materials: toBackendMaterial(quote.material),
-        gross_tonnage: Number(quote.grossTonnage || 0),
-        length_m: Number(quote.length || 0),
-        beam_width_m: Number(quote.width || 0),
-        total_insured_value: Number(quote.estimatedPrice || quote.amount || 0),
-        registration_number: "TEMP-REG",
-        home_port: "Alger"
+      const boatForm = new FormData();
+      boatForm.append("boat_name", quote.boatName || "Boat");
+      boatForm.append("boat_type", toBackendType(quote.type));
+      boatForm.append("engine_power_hp", String(Number(quote.power || 0)));
+      boatForm.append("construction_year", String(Number(quote.yearConstruction || 2020)));
+      boatForm.append("construction_materials", toBackendMaterial(quote.material));
+      boatForm.append("gross_tonnage", String(Number(quote.grossTonnage || 0)));
+      boatForm.append("length_m", String(Number(quote.length || 0)));
+      boatForm.append("beam_width_m", String(Number(quote.width || 0)));
+      boatForm.append("total_insured_value", String(Number(quote.amount || 0)));
+      boatForm.append("registration_number", quote.boatId || "TEMP-REG");
+      boatForm.append("home_port", "Alger");
+
+      ["photo_main", "photo_front", "photo_rear", "photo_interior", "photo_engine", "photo_hull"].forEach((field) => {
+        if (quote[field]) {
+          boatForm.append(field, quote[field]);
+        }
       });
+
+      const boatResponse = await createBoat(registerData.token, boatForm);
+      const boatId = boatResponse?.data?.id;
+      if (boatId) {
+        localStorage.setItem("cash_last_boat_id", String(boatId));
+      }
+      localStorage.setItem("cash_quote_snapshot", JSON.stringify({
+        duration: quote.duration,
+        startDate: quote.startDate,
+        endDate: quote.endDate,
+        selectedGuarantees: quote.selectedGuarantees,
+        estimatedPrice: quote.estimatedPrice,
+        amount: quote.amount,
+        boatName: quote.boatName
+      }));
 
       navigate("/account");
     } catch (err) {

@@ -18,7 +18,12 @@ function LoginPage() {
       const data = await login(form);
       localStorage.setItem("cash_token", data.token);
       localStorage.setItem("cash_user", JSON.stringify(data.user));
-      navigate("/quote/duration");
+
+      if (data.user?.role === "admin" || data.user?.role === "agent") {
+        navigate("/admin/contracts");
+      } else {
+        navigate("/account");
+      }
     } catch (err) {
       setError(err.message);
     } finally {

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>CASH Assurances — Mon espace</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<header class="main-header">
+  <div class="header-inner">
+    <div class="logo">CASH <span>Assurances</span></div>
+    <nav>
+      <a href="../index.html">Simulateur</a>
+      <span id="nav-name" style="color:rgba(255,255,255,0.85);font-size:14px"></span>
+      <a href="#" onclick="logout()" style="color:rgba(255,255,255,0.7);font-size:13px">Déconnexion</a>
+    </nav>
+  </div>
+</header>
+
+<div class="dashboard">
+  <div class="dash-header">
+    <div>
+      <h1>Mon espace</h1>
+      <div class="welcome" id="welcome-msg"></div>
+    </div>
+  </div>
+
+  <div class="dash-grid">
+    <!-- SIDEBAR -->
+    <div class="sidebar card">
+      <button class="sidebar-link active" onclick="showTab('contracts', this)">
+        <span class="icon">📋</span> Mes contrats
+      </button>
+      <button class="sidebar-link" onclick="showTab('profile', this)">
+        <span class="icon">👤</span> Mon profil
+      </button>
+      <button class="sidebar-link" onclick="showTab('settings', this)">
+        <span class="icon">⚙️</span> Paramètres
+      </button>
+    </div>
+
+    <!-- CONTENU -->
+    <div id="main-content">
+
+      <!-- ONGLET CONTRATS -->
+      <div id="tab-contracts" class="card">
+        <h2 style="font-size:18px;color:var(--blue);margin-bottom:20px">Mes contrats</h2>
+        <div id="contracts-list" class="contracts-grid">
+          <p style="color:var(--muted);text-align:center;padding:40px">Chargement…</p>
+        </div>
+      </div>
+
+      <!-- ONGLET PROFIL -->
+      <div id="tab-profile" class="card" style="display:none">
+        <div class="profile-section">
+          <h3>Informations personnelles</h3>
+          <div class="profile-info" id="profile-info"></div>
+        </div>
+      </div>
+
+      <!-- ONGLET PARAMÈTRES -->
+      <div id="tab-settings" class="card" style="display:none">
+        <div class="profile-section">
+          <h3>Modifier l'email</h3>
+          <div class="form-group">
+            <label>Nouvel email</label>
+            <input type="email" id="new-email" placeholder="nouveau@email.com">
+          </div>
+          <button class="btn-primary" style="width:auto;margin-top:0" onclick="updateEmail()">Mettre à jour</button>
+        </div>
+        <br>
+        <div class="profile-section">
+          <h3>Changer le mot de passe</h3>
+          <div class="form-group">
+            <label>Mot de passe actuel</label>
+            <input type="password" id="old-pass" placeholder="••••••••">
+          </div>
+          <div class="form-group">
+            <label>Nouveau mot de passe</label>
+            <input type="password" id="new-pass" placeholder="••••••••">
+          </div>
+          <button class="btn-primary" style="width:auto;margin-top:0" onclick="updatePassword()">Changer</button>
+        </div>
+        <div id="settings-alert"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:3000/api';
+const token = localStorage.getItem('token');
+const user  = JSON.parse(localStorage.getItem('user') || '{}');
+
+if (!token) window.location.href = 'login.html';
+
+document.getElementById('nav-name').textContent  = user.first_name + ' ' + user.last_name;
+document.getElementById('welcome-msg').textContent = 'Bonjour, ' + user.first_name + ' !';
+
+function logout() {
+  localStorage.clear();
+  window.location.href = 'login.html';
+}
+
+function showTab(tab, btn) {
+  ['contracts','profile','settings'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = 'none';
+  });
+  document.querySelectorAll('.sidebar-link').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).style.display = 'block';
+  btn.classList.add('active');
+  if (tab === 'profile') loadProfile();
+}
+
+function statusBadge(s) {
+  const map = { active:'Actif', pending:'En attente', expired:'Expiré', cancelled:'Annulé' };
+  return `<span class="status-badge status-${s}">${map[s]||s}</span>`;
+}
+
+function fmt(n) {
+  return parseFloat(n).toLocaleString('fr-DZ',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' DA';
+}
+
+function fmtDate(d) {
+  return new Date(d).toLocaleDateString('fr-DZ');
+}
+
+// ── Charger contrats ──────────────────────────────────────────
+async function loadContracts() {
+  const res  = await fetch(`${API}/contracts/mine`, { headers: { Authorization: `Bearer ${token}` } });
+  const data = await res.json();
+  const box  = document.getElementById('contracts-list');
+
+  if (!data.data || data.data.length === 0) {
+    box.innerHTML = `
+      <div style="text-align:center;padding:40px;color:var(--muted)">
+        <div style="font-size:40px;margin-bottom:12px">📋</div>
+        <p>Aucun contrat pour l'instant</p>
+        <a href="../index.html" class="btn-primary" style="display:inline-block;margin-top:16px;width:auto">Simuler une assurance</a>
+      </div>`;
+    return;
+  }
+
+  box.innerHTML = data.data.map(c => `
+    <div class="contract-card" onclick="openContract(${c.id})">
+      <div class="cc-left">
+        <div class="cc-boat">⛵ ${c.boat_name}</div>
+        <div class="cc-number">N° ${c.policy_number}</div>
+        <div class="cc-dates">📅 ${fmtDate(c.start_date)} → ${fmtDate(c.end_date)}</div>
+      </div>
+      <div class="cc-right">
+        <div class="cc-total">${fmt(c.total_general)}</div>
+        ${statusBadge(c.status)}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Charger profil ────────────────────────────────────────────
+async function loadProfile() {
+  const res  = await fetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
+  const data = await res.json();
+  const u    = data.user;
+  document.getElementById('profile-info').innerHTML = `
+    <div class="info-item"><label>Nom complet</label><span>${u.first_name} ${u.last_name}</span></div>
+    <div class="info-item"><label>Email</label><span>${u.email}</span></div>
+    <div class="info-item"><label>Téléphone</label><span>${u.phone_number}</span></div>
+    <div class="info-item"><label>Wilaya</label><span>${u.wilaya}</span></div>
+    <div class="info-item"><label>Adresse</label><span>${u.address}</span></div>
+    <div class="info-item"><label>Code postal</label><span>${u.postal_code}</span></div>
+  `;
+}
+
+function openContract(id) {
+  window.location.href = `contract-sheet.html?id=${id}`;
+}
+
+function updateEmail()    { alert('Fonctionnalité à connecter à /api/auth/update-email'); }
+function updatePassword() { alert('Fonctionnalité à connecter à /api/auth/update-password'); }
+
+loadContracts();
+</script>
+</body>
+</html>

@@ -8,6 +8,12 @@ function toIsoDate(date) {
   return date.toISOString().slice(0, 10);
 }
 
+function getDurationMonths(duration) {
+  if (duration === "6_months") return 6;
+  if (duration === "1_year") return 12;
+  return 3;
+}
+
 function InsuranceDurationPage() {
   const { t } = useI18n();
   const { quote, updateQuote } = useQuote();
@@ -31,7 +37,7 @@ function InsuranceDurationPage() {
     }
 
     const end = new Date(start);
-    end.setMonth(end.getMonth() + Number(quote.duration));
+    end.setMonth(end.getMonth() + getDurationMonths(quote.duration));
     const formatted = end.toISOString().slice(0, 10);
     if (formatted !== quote.endDate) {
       updateQuote({ endDate: formatted });
@@ -69,9 +75,9 @@ function InsuranceDurationPage() {
         <label className="label-text">{t.duration}</label>
         <div className="radio-list">
           {[
-            { value: "3", label: t.months3 },
-            { value: "6", label: t.months6 },
-            { value: "12", label: t.year1 }
+            { value: "3_months", label: t.months3 },
+            { value: "6_months", label: t.months6 },
+            { value: "1_year", label: t.year1 }
           ].map((item) => (
             <label className="radio-item" key={item.value}>
               <input
