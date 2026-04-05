@@ -22,6 +22,13 @@ function BoatDetailsPage() {
     updateQuote({ [key]: value });
   };
 
+  const handleTypeChange = (value) => {
+    updateQuote({
+      type: value,
+      power: value === "motor" ? quote.power : 0
+    });
+  };
+
   const handleFileChange = (key, file) => {
     updateQuote({ [key]: file || null });
   };
@@ -73,25 +80,27 @@ function BoatDetailsPage() {
 
         <div className="floating-select">
           {!quote.type ? <span className="select-holder">{t.type}</span> : null}
-          <select className="input floating-select-input" value={quote.type} onChange={(e) => handleChange("type", e.target.value)} required>
+          <select className="input floating-select-input" value={quote.type} onChange={(e) => handleTypeChange(e.target.value)} required>
             <option value="" disabled hidden></option>
             <option value="sail">{t.boatTypes.sail}</option>
             <option value="motor">{t.boatTypes.motor}</option>
           </select>
         </div>
 
-        <div className="inline-row">
-          <label>{t.power}</label>
-          <input
-            className="input input-small"
-            type="number"
-            min="0"
-            step="1"
-            value={quote.power}
-            onChange={(e) => handleChange("power", e.target.value)}
-            required
-          />
-        </div>
+        {quote.type === "motor" ? (
+          <div className="inline-row">
+            <label>{t.power}</label>
+            <input
+              className="input input-small"
+              type="number"
+              min="0"
+              step="1"
+              value={quote.power}
+              onChange={(e) => handleChange("power", e.target.value)}
+              required
+            />
+          </div>
+        ) : null}
 
         <div className="inline-row">
           <label>{t.yearConstruction}</label>

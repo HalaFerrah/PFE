@@ -35,10 +35,8 @@ function GuaranteeCalculationPage() {
   const durationLabel = quote.duration === "1_year" ? t.year1 : quote.duration === "6_months" ? t.months6 : t.months3;
   const premiumData = quote.premiumDetails;
   const mandatoryValue = premiumData?.garantie_principale?.prime || 0;
-  const optionalValue = useMemo(() => {
-    if (!premiumData?.garanties_complementaires) return 0;
-    return premiumData.garanties_complementaires.reduce((sum, item) => sum + Number(item.prime || 0), 0);
-  }, [premiumData]);
+  const complementaryDetails = useMemo(() => premiumData?.garanties_complementaires || [], [premiumData]);
+  const optionalValue = useMemo(() => complementaryDetails.reduce((sum, item) => sum + Number(item.prime || 0), 0), [complementaryDetails]);
 
   useEffect(() => {
     if (!quote.amount || !quote.yearConstruction || !quote.type || !quote.duration) {
@@ -85,7 +83,8 @@ function GuaranteeCalculationPage() {
       selectedGuarantees: quote.selectedGuarantees,
       estimatedPrice: quote.estimatedPrice,
       amount: quote.amount,
-      boatName: quote.boatName
+      boatName: quote.boatName,
+      premiumDetails: quote.premiumDetails
     }));
   };
 
@@ -187,20 +186,71 @@ function GuaranteeCalculationPage() {
 
         {error ? <p className="form-error">{error}</p> : null}
 
-        <div className="summary-block premium-summary smooth-panel">
-          <div className="summary-row"><span>{t.boatName}</span><strong>{quote.boatName || "-"}</strong></div>
-          <div className="summary-row"><span>{t.duration}</span><strong>{durationLabel}</strong></div>
-          <div className="summary-row"><span>{t.amount}</span><strong>{formatMoney(quote.amount)}</strong></div>
-          <div className="summary-row"><span>{t.boatTypeLabel}</span><strong>{premiumData?.type_navire || (quote.type === "sail" ? "sailboat" : "motorboat")}</strong></div>
-          <div className="summary-row"><span>{t.boatAgeLabel}</span><strong>{premiumData?.age_navire ?? "-"}</strong></div>
-          <div className="summary-row"><span>{t.mainNetPremium}</span><strong>{formatMoney(mandatoryValue)}</strong></div>
-          <div className="summary-row"><span>{t.optionalGuarantees}</span><strong>{formatMoney(optionalValue)}</strong></div>
-          <div className="summary-row"><span>{t.totalNetPremium}</span><strong>{formatMoney(premiumData?.prime_nette_totale || 0)}</strong></div>
-          <div className="summary-row"><span>{t.durationCoefficient}</span><strong>{premiumData?.coefficient_duree ?? "-"}</strong></div>
-          <div className="summary-row"><span>{t.adjustedNetPremium}</span><strong>{formatMoney(premiumData?.prime_nette_ajustee || 0)}</strong></div>
-          <div className="summary-row"><span>{t.taxLabel}</span><strong>{formatMoney(premiumData?.taxe_7pct || 0)}</strong></div>
-          <div className="summary-row"><span>{t.stampDuty}</span><strong>{formatMoney(premiumData?.droit_timbre || 0)}</strong></div>
-          <div className="summary-row price-row"><span>{t.finalCalculation}</span><strong>{loading ? t.calculating : formatMoney(quote.estimatedPrice || 0)}</strong></div>
+        <div className="premium-estimation-card smooth-panel">
+          <div className="premium-estimation-head">
+            <div>
+              <h3>{t.premiumEstimateTitle}</h3>
+              <p>{quote.boatName || "-"} • {durationLabel}</p>
+            </div>
+            <span className="premium-estimation-chip">{t.premiumEstimateChip}</span>
+          </div>
+
+          <div className="premium-context-grid">
+            <div className="premium-context-item">
+              <span>{t.amount}</span>
+              <strong>{formatMoney(premiumData?.valeur_assuree || quote.amount)}</strong>
+            </div>
+            <div className="premium-context-item">
+              <span>{t.boatTypeLabel}</span>
+              <strong>{premiumData?.type_navire || (quote.type === "sail" ? "sailboat" : "motorboat")}</strong>
+            </div>
+            <div className="premium-context-item">
+              <span>{t.boatAgeLabel}</span>
+              <strong>{premiumData?.age_navire ?? "-"}</strong>
+            </div>
+            <div className="premium-context-item">
+              <span>{t.mainGuaranteeCode}</span>
+              <strong>{premiumData?.garantie_principale?.code || "34141A"}</strong>
+            </div>
+          </div>
+
+          <div className="premium-estimation-body">
+            <div className="premium-line">
+              <span>{t.mainNetPremium} ({premiumData?.garantie_principale?.code || "34141A"})</span>
+              <strong>{formatMoney(mandatoryValue)}</strong>
+            </div>
+            <div className="premium-line">
+              <span>{t.optionalGuarantees}</span>
+              <strong>{formatMoney(optionalValue)}</strong>
+            </div>
+            {complementaryDetails.map((item) => (
+              <div className="premium-line premium-line-sub" key={item.code}>
+                <span>{t.guarantees[item.code] || item.code}</span>
+                <strong>{formatMoney(item.prime)}</strong>
+              </div>
+            ))}
+            <div className="premium-line">
+              <span>{t.adjustedNetPremium}</span>
+              <strong>{formatMoney(premiumData?.prime_nette_ajustee || 0)}</strong>
+            </div>
+            <div className="premium-line">
+              <span>{t.policyCost}</span>
+              <strong>{formatMoney(premiumData?.droit_timbre || 0)}</strong>
+            </div>
+            <div className="premium-line">
+              <span>{t.taxLabel}</span>
+              <strong>{formatMoney(premiumData?.taxe_7pct || 0)}</strong>
+            </div>
+            <div className="premium-line">
+              <span>{t.stampLabel}</span>
+              <strong>{formatMoney(0)}</strong>
+            </div>
+          </div>
+
+          <div className="premium-total-band">
+            <span>{t.finalCalculation}</span>
+            <strong>{loading ? t.calculating : formatMoney(premiumData?.prime_totale_ttc || quote.estimatedPrice || 0)}</strong>
+          </div>
         </div>
 
         <button type="button" className="primary-btn strong-btn" onClick={handleContinue} disabled={loading || !!error || !quote.estimatedPrice}>

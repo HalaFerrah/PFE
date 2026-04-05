@@ -16,15 +16,6 @@ function Header() {
   const isTestActive = location.pathname.startsWith("/quote/");
   const isDashboardActive = location.pathname.startsWith(isAdmin ? "/admin" : "/account") || location.pathname.startsWith("/contracts/");
 
-  const handleLogout = () => {
-    localStorage.removeItem("cash_token");
-    localStorage.removeItem("cash_user");
-    localStorage.removeItem("cash_last_boat_id");
-    localStorage.removeItem("cash_last_contract_id");
-    localStorage.removeItem("cash_quote_snapshot");
-    navigate("/home");
-  };
-
   return (
     <header className="topbar-wrap">
       <div className="topbar-content premium-header">
@@ -44,11 +35,7 @@ function Header() {
           <button type="button" className={`header-link ${isQuotesActive ? "is-active" : ""}`} onClick={() => navigate("/nos-devis")}>
             {t.quotesNav}
           </button>
-          {isLoggedIn ? (
-            <button type="button" className="header-link" onClick={handleLogout}>
-              {t.logout}
-            </button>
-          ) : (
+          {isLoggedIn ? null : (
             <button type="button" className={`header-link ${isLoginActive ? "is-active" : ""}`} onClick={() => navigate("/login")}>
               {t.login}
             </button>
