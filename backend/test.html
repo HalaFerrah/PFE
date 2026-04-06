@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CASH Assurances — Test Devis</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      padding: 30px 16px;
+    }
+
+    .container {
+      max-width: 620px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #1a3a5c;
+      margin-bottom: 6px;
+      font-size: 22px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+
+    .card h2 {
+      font-size: 15px;
+      color: #1a3a5c;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e8f0fe;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: #444;
+      margin-bottom: 4px;
+      margin-top: 12px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid #cdd5e0;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #222;
+      background: #fafbfc;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #1a3a5c;
+      background: white;
+    }
+
+    /* Garanties checkboxes */
+    .garanties-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .garantie-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f5f7fa;
+      border: 1px solid #dde3ed;
+      border-radius: 6px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .garantie-item:hover { border-color: #1a3a5c; }
+
+    .garantie-item input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: #1a3a5c;
+    }
+
+    .garantie-item label {
+      margin: 0;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+      color: #1a3a5c;
+    }
+
+    .garantie-item span {
+      font-size: 11px;
+      color: #888;
+      display: block;
+    }
+
+    button {
+      width: 100%;
+      padding: 13px;
+      background: #1a3a5c;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background 0.2s;
+    }
+
+    button:hover:not(:disabled) { background: #0f2440; }
+    button:disabled { background: #7a9cbf; cursor: not-allowed; }
+
+    /* Résultat */
+    #resultat { display: none; }
+
+    .result-header {
+      background: #1a3a5c;
+      color: white;
+      border-radius: 10px 10px 0 0;
+      padding: 16px 20px;
+      margin: -24px -24px 20px -24px;
+    }
+
+    .result-header h2 {
+      color: white;
+      border: none;
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .result-header p {
+      font-size: 12px;
+      opacity: 0.75;
+      margin-top: 2px;
+    }
+
+    .ligne {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 14px;
+    }
+
+    .ligne:last-child { border-bottom: none; }
+
+    .ligne .label { color: #555; }
+    .ligne .valeur { font-weight: bold; color: #1a3a5c; }
+
+    .ligne.garantie .label { color: #888; font-size: 13px; padding-left: 12px; }
+    .ligne.garantie .valeur { font-size: 13px; color: #444; }
+
+    .separateur {
+      border: none;
+      border-top: 2px solid #e8f0fe;
+      margin: 10px 0;
+    }
+
+    .ligne.total {
+      padding: 12px 0 4px;
+    }
+
+    .ligne.total .label {
+      font-size: 16px;
+      font-weight: bold;
+      color: #1a3a5c;
+    }
+
+    .ligne.total .valeur {
+      font-size: 20px;
+      font-weight: bold;
+      color: #d4380d;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #e8f0fe;
+      color: #1a3a5c;
+      border-radius: 4px;
+      padding: 2px 7px;
+      font-size: 11px;
+      margin-left: 6px;
+    }
+
+    .erreur {
+      background: #fff2f0;
+      border: 1px solid #ffccc7;
+      border-radius: 8px;
+      padding: 14px;
+      color: #cf1322;
+      font-size: 13px;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>🚢 CASH Assurances</h1>
+  <p class="subtitle">Simulateur de devis — Assurance Plaisance</p>
+
+  <div class="card">
+    <h2>Informations du navire</h2>
+
+    <label>Type de navire</label>
+    <select id="boat_type">
+      <option value="motorboat">À moteur</option>
+      <option value="sailboat">À voile</option>
+    </select>
+
+    <label>Année de construction</label>
+    <input type="number" id="construction_year" value="2015" min="1900" max="2025">
+
+    <label>Valeur assurée (DA)</label>
+    <input type="number" id="total_insured_value" value="5000000" min="1">
+  </div>
+
+  <div class="card">
+    <h2>Garanties souhaitées</h2>
+    <div class="garanties-grid">
+
+      <div class="garantie-item">
+        <input type="checkbox" id="g34141A" value="34141A" checked>
+        <div>
+          <label for="g34141A">34141A</label>
+          <span>Corps du navire (taux variable)</span>
+        </div>
+      </div>
+
+      <div class="garantie-item">
+        <input type="checkbox" id="g34142A" value="34142A">
+        <div>
+          <label for="g34142A">34142A</label>
+          <span>Responsabilité civile (5‰)</span>
+        </div>
+      </div>
+
+      <div class="garantie-item">
+        <input type="checkbox" id="g34142B" value="34142B">
+        <div>
+          <label for="g34142B">34142B</label>
+          <span>Garantie B (8‰)</span>
+        </div>
+      </div>
+
+      <div class="garantie-item">
+        <input type="checkbox" id="g34142C" value="34142C">
+        <div>
+          <label for="g34142C">34142C</label>
+          <span>Garantie C (10‰)</span>
+        </div>
+      </div>
+
+      <div class="garantie-item">
+        <input type="checkbox" id="g34142D" value="34142D">
+        <div>
+          <label for="g34142D">34142D</label>
+          <span>Garantie D (1.5‰)</span>
+        </div>
+      </div>
+
+    </div>
+
+    <button id="btn-calculer" onclick="calculer()">Calculer le devis</button>
+  </div>
+
+  <!-- Résultat -->
+  <div class="card" id="resultat">
+    <div class="result-header">
+      <h2>Résultat du devis</h2>
+      <p id="result-infos"></p>
+    </div>
+
+    <div id="result-body"></div>
+  </div>
+
+  <div id="erreur-box"></div>
+
+</div>
+
+<script>
+  function fmt(n) {
+    return parseFloat(n).toLocaleString('fr-DZ', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }) + ' DA';
+  }
+
+  async function calculer() {
+    // Récupération des valeurs
+    const total_insured_value = parseFloat(document.getElementById('total_insured_value').value);
+    const construction_year   = parseInt(document.getElementById('construction_year').value);
+    const boat_type           = document.getElementById('boat_type').value;
+    const garanties           = [...document.querySelectorAll('.garanties-grid input:checked')].map(c => c.value);
+
+    // Validation
+    document.getElementById('erreur-box').innerHTML = '';
+    document.getElementById('resultat').style.display = 'none';
+
+    if (!total_insured_value || total_insured_value <= 0) {
+      showErreur('Veuillez entrer une valeur assurée valide.');
+      return;
+    }
+    if (!construction_year || construction_year < 1900) {
+      showErreur('Veuillez entrer une année de construction valide.');
+      return;
+    }
+    if (garanties.length === 0) {
+      showErreur('Veuillez sélectionner au moins une garantie.');
+      return;
+    }
+
+    // Bouton loading
+    const btn = document.getElementById('btn-calculer');
+    btn.textContent = 'Calcul en cours…';
+    btn.disabled = true;
+
+    try {
+      const res  = await fetch('http://localhost:3000/api/devis/calculer', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ boat_type, construction_year, total_insured_value, garanties }),
+      });
+
+      const json = await res.json();
+
+      if (!json.success) {
+        showErreur('Erreur serveur : ' + json.message);
+        return;
+      }
+
+      afficherResultat(json.data, boat_type, construction_year, total_insured_value);
+
+    } catch (err) {
+      showErreur('Impossible de joindre le serveur. Vérifiez que node server.js tourne sur le port 3000.\n\nDétail : ' + err.message);
+    } finally {
+      btn.textContent = 'Calculer le devis';
+      btn.disabled = false;
+    }
+  }
+
+  function afficherResultat(data, boat_type, construction_year, valeur) {
+    const age      = new Date().getFullYear() - construction_year;
+    const typeLabel = boat_type === 'motorboat' ? 'À moteur' : 'À voile';
+
+    document.getElementById('result-infos').textContent =
+      `${typeLabel} — ${age} ans — ${valeur.toLocaleString('fr-DZ')} DA assurés`;
+
+    let html = '';
+
+    // Détail par garantie
+    html += `<div class="ligne"><span class="label"><strong>Détail des garanties</strong></span></div>`;
+    for (const [code, info] of Object.entries(data.detail)) {
+      html += `
+        <div class="ligne garantie">
+          <span class="label">${code} <span class="badge">${info.taux}</span></span>
+          <span class="valeur">${fmt(info.prime)}</span>
+        </div>`;
+    }
+
+    html += `<hr class="separateur">`;
+
+    // Prime nette
+    html += `
+      <div class="ligne">
+        <span class="label">Prime nette</span>
+        <span class="valeur">${fmt(data.prime_nette)}</span>
+      </div>
+      <div class="ligne">
+        <span class="label">TVA (19%)</span>
+        <span class="valeur">${fmt(data.tva)}</span>
+      </div>
+      <div class="ligne">
+        <span class="label">Coût de police</span>
+        <span class="valeur">${fmt(data.cout_police)}</span>
+      </div>
+      <div class="ligne">
+        <span class="label">Timbre (2 pages × 60 DA)</span>
+        <span class="valeur">${fmt(data.timbre)}</span>
+      </div>`;
+
+    html += `<hr class="separateur">`;
+
+    // Total
+    html += `
+      <div class="ligne total">
+        <span class="label">PRIME TOTALE TTC</span>
+        <span class="valeur">${fmt(data.prime_totale)}</span>
+      </div>`;
+
+    document.getElementById('result-body').innerHTML = html;
+    document.getElementById('resultat').style.display = 'block';
+    document.getElementById('resultat').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function showErreur(msg) {
+    document.getElementById('erreur-box').innerHTML =
+      `<div class="erreur">⚠️ ${msg.replace(/\n/g, '<br>')}</div>`;
+  }
+</script>
+</body>
+</html>

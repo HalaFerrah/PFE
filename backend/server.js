@@ -10,17 +10,27 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, process.env.UPLOAD_DIR || 'uploads')));
 
-// ── Routes ─────────────────────────────────────────────────
-app.use('/api/auth',      require('./routes/auth'));
-app.use('/api/boats',     require('./routes/boats'));
-app.use('/api/premium',   require('./routes/premium'));
-app.use('/api/contracts', require('./routes/contracts'));  // ← NOUVEAU
+// ── Routes API ─────────────────────────────────────────
+app.use('/api/auth',  require('./routes/auth'));
+app.use('/api/boats', require('./routes/boats'));
+app.use('/api/devis', require('./routes/devis'));
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', service: 'CASH Assurances API', version: '2.0.0' });
+// ── Page de test ───────────────────────────────────────
+app.get('/test', (req, res) => {
+  res.sendFile(path.join(__dirname, 'test.html'));
 });
 
-app.use((req, res) => res.status(404).json({ success: false, message: `Route ${req.path} not found` }));
+// ── Health check ───────────────────────────────────────
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', service: 'CASH Assurances API', version: '1.0.0' });
+});
+
+// ── Route introuvable ──────────────────────────────────
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: `Route ${req.path} not found` });
+});
+
+// ── Erreurs globales ───────────────────────────────────
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ success: false, message: err.message });
@@ -28,7 +38,7 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀  CASH Assurances API — port ${PORT}`);
+  console.log(`🚀 CASH Assurances API – port ${PORT}`);
 });
 
 module.exports = app;
