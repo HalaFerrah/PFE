@@ -16,7 +16,6 @@ function NosDevisPage() {
       <RevealOnScroll>
         <section className="institutional-hero">
           <div className="institutional-copy">
-            <p className="eyebrow">CASH Assurances</p>
             <h1 className="institutional-title">{t.devisTitle}</h1>
             <p className="institutional-subtitle">{t.devisSubtitle}</p>
             <p className="institutional-body">{t.devisLead}</p>

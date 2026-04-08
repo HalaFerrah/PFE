@@ -4,6 +4,10 @@ function isMissingContractTableError(message = "") {
   return message.includes("insurance_contract") && message.includes("doesn't exist");
 }
 
+function isMissingContractsRouteError(message = "") {
+  return message.includes("/api/contracts/mine") && message.toLowerCase().includes("not found");
+}
+
 async function request(path, options = {}) {
   const isFormData = options.body instanceof FormData;
   let response;
@@ -62,8 +66,23 @@ export function createBoat(token, payload) {
   });
 }
 
+export function updateBoat(token, boatId, payload) {
+  return request(`/boats/${boatId}`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload)
+  });
+}
+
+export function deleteBoat(token, boatId) {
+  return request(`/boats/${boatId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` }
+  });
+}
+
 export function simulatePremium(payload) {
-  return request("/premium/simulate", {
+  return request("/devis/calculer", {
     method: "POST",
     body: JSON.stringify(payload)
   });
@@ -90,7 +109,7 @@ export async function getMyContracts(token) {
       headers: { Authorization: `Bearer ${token}` }
     });
   } catch (error) {
-    if (isMissingContractTableError(error.message)) {
+    if (isMissingContractTableError(error.message) || isMissingContractsRouteError(error.message)) {
       return { data: [] };
     }
     throw error;

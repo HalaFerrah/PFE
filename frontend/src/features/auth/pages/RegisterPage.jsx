@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import BackNav from "../../../components/ui/BackNav";
 import { useI18n } from "../../../i18n/I18nProvider";
 import { useQuote } from "../../quote/QuoteContext";
-import { createBoat, register } from "../../../api/client";
+import { createBoat, createContract, register } from "../../../api/client";
 
 function toBackendMaterial(material) {
   if (material === "steel") return "steel";
@@ -97,6 +97,22 @@ function RegisterPage() {
         amount: quote.amount,
         boatName: quote.boatName
       }));
+
+      if (boatId) {
+        const contractResponse = await createContract(registerData.token, {
+          boat_id: Number(boatId),
+          contract_duration: quote.duration,
+          start_date: quote.startDate,
+          guarantee_codes: quote.selectedGuarantees || [],
+          payment_method: "CIB"
+        });
+        const contractId = contractResponse?.data?.contract_id;
+        if (contractId) {
+          localStorage.setItem("cash_last_contract_id", String(contractId));
+          navigate(`/contracts/${contractId}`);
+          return;
+        }
+      }
 
       navigate("/account");
     } catch (err) {

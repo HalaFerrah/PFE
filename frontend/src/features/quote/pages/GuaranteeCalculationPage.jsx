@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Stepper from "../../../components/ui/Stepper";
 import BackNav from "../../../components/ui/BackNav";
 import { useI18n } from "../../../i18n/I18nProvider";
-import { createBoat, simulatePremium } from "../../../api/client";
+import { createBoat, createContract, simulatePremium } from "../../../api/client";
 import { useQuote } from "../QuoteContext";
 
 const MAIN_GUARANTEES = ["34141A"];
@@ -32,14 +32,23 @@ function GuaranteeCalculationPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const durationLabel = quote.duration === "1_year" ? t.year1 : quote.duration === "6_months" ? t.months6 : t.months3;
   const premiumData = quote.premiumDetails;
-  const mandatoryValue = premiumData?.garantie_principale?.prime || 0;
-  const complementaryDetails = useMemo(() => premiumData?.garanties_complementaires || [], [premiumData]);
-  const optionalValue = useMemo(() => complementaryDetails.reduce((sum, item) => sum + Number(item.prime || 0), 0), [complementaryDetails]);
+  const detail = premiumData?.detail || {};
+  const mandatoryValue = Number(detail["34141A"]?.prime || 0);
+  const complementaryDetails = useMemo(
+    () =>
+      Object.entries(detail)
+        .filter(([code]) => code !== "34141A")
+        .map(([code, values]) => ({ code, ...values })),
+    [detail]
+  );
+  const optionalValue = useMemo(
+    () => complementaryDetails.reduce((sum, item) => sum + Number(item.prime || 0), 0),
+    [complementaryDetails]
+  );
 
   useEffect(() => {
-    if (!quote.amount || !quote.yearConstruction || !quote.type || !quote.duration) {
+    if (!quote.amount || !quote.yearConstruction || !quote.type) {
       return;
     }
 
@@ -50,15 +59,14 @@ function GuaranteeCalculationPage() {
     simulatePremium({
       total_insured_value: Number(quote.amount || 0),
       construction_year: Number(quote.yearConstruction || 0),
-      boat_type: quote.type === "sail" ? "sailboat" : "motorboat",
-      contract_duration: quote.duration,
-      guarantee_codes: quote.selectedGuarantees
+      boat_type: toBackendType(quote.type),
+      garanties: ["34141A", ...quote.selectedGuarantees]
     })
       .then((response) => {
         if (!active) return;
         updateQuote({
           premiumDetails: response.data,
-          estimatedPrice: Number(response.data?.prime_totale_ttc || 0)
+          estimatedPrice: Number(response.data?.prime_totale || 0)
         });
       })
       .catch((err) => {
@@ -73,19 +81,22 @@ function GuaranteeCalculationPage() {
     return () => {
       active = false;
     };
-  }, [quote.amount, quote.yearConstruction, quote.type, quote.duration, quote.selectedGuarantees, updateQuote]);
+  }, [quote.amount, quote.yearConstruction, quote.type, quote.selectedGuarantees, updateQuote]);
 
   const persistQuoteSnapshot = () => {
-    localStorage.setItem("cash_quote_snapshot", JSON.stringify({
-      duration: quote.duration,
-      startDate: quote.startDate,
-      endDate: quote.endDate,
-      selectedGuarantees: quote.selectedGuarantees,
-      estimatedPrice: quote.estimatedPrice,
-      amount: quote.amount,
-      boatName: quote.boatName,
-      premiumDetails: quote.premiumDetails
-    }));
+    localStorage.setItem(
+      "cash_quote_snapshot",
+      JSON.stringify({
+        duration: quote.duration,
+        startDate: quote.startDate,
+        endDate: quote.endDate,
+        selectedGuarantees: quote.selectedGuarantees,
+        estimatedPrice: quote.estimatedPrice,
+        amount: quote.amount,
+        boatName: quote.boatName,
+        premiumDetails: quote.premiumDetails
+      })
+    );
   };
 
   const createBoatForLoggedInUser = async () => {
@@ -113,6 +124,8 @@ function GuaranteeCalculationPage() {
     if (boatId) {
       localStorage.setItem("cash_last_boat_id", String(boatId));
     }
+
+    return boatId;
   };
 
   const handleContinue = async () => {
@@ -124,9 +137,23 @@ function GuaranteeCalculationPage() {
     setLoading(true);
     setError("");
     try {
-      await createBoatForLoggedInUser();
+      const boatId = await createBoatForLoggedInUser();
       persistQuoteSnapshot();
-      navigate("/payment");
+      const storedUser = JSON.parse(localStorage.getItem("cash_user") || "{}");
+      const contractResponse = await createContract(token, {
+        boat_id: Number(boatId),
+        contract_duration: quote.duration,
+        start_date: quote.startDate,
+        guarantee_codes: quote.selectedGuarantees || [],
+        payment_method: storedUser.preferred_payment || "CIB"
+      });
+      const contractId = contractResponse?.data?.contract_id;
+      if (contractId) {
+        localStorage.setItem("cash_last_contract_id", String(contractId));
+        navigate(`/contracts/${contractId}`);
+        return;
+      }
+      navigate("/account");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -190,33 +217,12 @@ function GuaranteeCalculationPage() {
           <div className="premium-estimation-head">
             <div>
               <h3>{t.premiumEstimateTitle}</h3>
-              <p>{quote.boatName || "-"} • {durationLabel}</p>
-            </div>
-            <span className="premium-estimation-chip">{t.premiumEstimateChip}</span>
-          </div>
-
-          <div className="premium-context-grid">
-            <div className="premium-context-item">
-              <span>{t.amount}</span>
-              <strong>{formatMoney(premiumData?.valeur_assuree || quote.amount)}</strong>
-            </div>
-            <div className="premium-context-item">
-              <span>{t.boatTypeLabel}</span>
-              <strong>{premiumData?.type_navire || (quote.type === "sail" ? "sailboat" : "motorboat")}</strong>
-            </div>
-            <div className="premium-context-item">
-              <span>{t.boatAgeLabel}</span>
-              <strong>{premiumData?.age_navire ?? "-"}</strong>
-            </div>
-            <div className="premium-context-item">
-              <span>{t.mainGuaranteeCode}</span>
-              <strong>{premiumData?.garantie_principale?.code || "34141A"}</strong>
             </div>
           </div>
 
           <div className="premium-estimation-body">
             <div className="premium-line">
-              <span>{t.mainNetPremium} ({premiumData?.garantie_principale?.code || "34141A"})</span>
+              <span>{t.mainNetPremium} (34141A)</span>
               <strong>{formatMoney(mandatoryValue)}</strong>
             </div>
             <div className="premium-line">
@@ -231,25 +237,25 @@ function GuaranteeCalculationPage() {
             ))}
             <div className="premium-line">
               <span>{t.adjustedNetPremium}</span>
-              <strong>{formatMoney(premiumData?.prime_nette_ajustee || 0)}</strong>
+              <strong>{formatMoney(premiumData?.prime_nette || 0)}</strong>
             </div>
             <div className="premium-line">
               <span>{t.policyCost}</span>
-              <strong>{formatMoney(premiumData?.droit_timbre || 0)}</strong>
+              <strong>{formatMoney(premiumData?.cout_police || 0)}</strong>
             </div>
             <div className="premium-line">
               <span>{t.taxLabel}</span>
-              <strong>{formatMoney(premiumData?.taxe_7pct || 0)}</strong>
+              <strong>{formatMoney(premiumData?.tva || 0)}</strong>
             </div>
             <div className="premium-line">
               <span>{t.stampLabel}</span>
-              <strong>{formatMoney(0)}</strong>
+              <strong>{formatMoney(premiumData?.timbre || 0)}</strong>
             </div>
           </div>
 
           <div className="premium-total-band">
             <span>{t.finalCalculation}</span>
-            <strong>{loading ? t.calculating : formatMoney(premiumData?.prime_totale_ttc || quote.estimatedPrice || 0)}</strong>
+            <strong>{loading ? t.calculating : formatMoney(premiumData?.prime_totale || quote.estimatedPrice || 0)}</strong>
           </div>
         </div>
 

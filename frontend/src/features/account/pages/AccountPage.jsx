@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BackNav from "../../../components/ui/BackNav";
 import { useI18n } from "../../../i18n/I18nProvider";
-import { getMe, getMyBoats, getMyContracts } from "../../../api/client";
+import { deleteBoat, getMe, getMyBoats, getMyContracts, updateBoat } from "../../../api/client";
 import { useQuote } from "../../quote/QuoteContext";
 
 const PROFILE_OVERRIDE_KEY = "cash_profile_override";
@@ -30,6 +30,14 @@ function AccountPage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOverride, setProfileOverride] = useState(storedOverride);
   const [profileAvatar, setProfileAvatar] = useState(storedAvatar);
+  const [editingBoatId, setEditingBoatId] = useState(null);
+  const [boatLoading, setBoatLoading] = useState(false);
+  const [boatForm, setBoatForm] = useState({
+    boat_name: "",
+    registration_number: "",
+    boat_type: "",
+    total_insured_value: ""
+  });
   const [settingsForm, setSettingsForm] = useState({
     first_name: storedOverride.first_name || storedUser.first_name || "",
     last_name: storedOverride.last_name || storedUser.last_name || "",
@@ -111,6 +119,10 @@ function AccountPage() {
     setSettingsForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  const handleBoatFormChange = (key, value) => {
+    setBoatForm((prev) => ({ ...prev, [key]: value }));
+  };
+
   const handleAvatarChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -166,11 +178,87 @@ function AccountPage() {
     setSettingsOpen(false);
   };
 
+  const handleEditBoat = (boat) => {
+    setEditingBoatId(boat.id);
+    setBoatForm({
+      boat_name: boat.boat_name || "",
+      registration_number: boat.registration_number || "",
+      boat_type: boat.boat_type || "",
+      total_insured_value: boat.total_insured_value || ""
+    });
+    setSaveMessage("");
+    setError("");
+  };
+
+  const handleCancelBoatEdit = () => {
+    setEditingBoatId(null);
+    setBoatForm({
+      boat_name: "",
+      registration_number: "",
+      boat_type: "",
+      total_insured_value: ""
+    });
+  };
+
+  const handleSaveBoat = async (event) => {
+    event.preventDefault();
+    if (!editingBoatId) return;
+    setBoatLoading(true);
+    setError("");
+    setSaveMessage("");
+    try {
+      await updateBoat(token, editingBoatId, {
+        boat_name: boatForm.boat_name.trim(),
+        registration_number: boatForm.registration_number.trim(),
+        boat_type: boatForm.boat_type,
+        total_insured_value: Number(boatForm.total_insured_value || 0)
+      });
+      setBoats((prev) =>
+        prev.map((boat) =>
+          boat.id === editingBoatId
+            ? {
+                ...boat,
+                boat_name: boatForm.boat_name.trim(),
+                registration_number: boatForm.registration_number.trim(),
+                boat_type: boatForm.boat_type,
+                total_insured_value: Number(boatForm.total_insured_value || 0)
+              }
+            : boat
+        )
+      );
+      setSaveMessage(t.boatUpdated);
+      handleCancelBoatEdit();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBoatLoading(false);
+    }
+  };
+
+  const handleDeleteBoat = async (boatId) => {
+    const confirmed = window.confirm(t.deleteBoatConfirm);
+    if (!confirmed) return;
+    setBoatLoading(true);
+    setError("");
+    setSaveMessage("");
+    try {
+      await deleteBoat(token, boatId);
+      setBoats((prev) => prev.filter((boat) => boat.id !== boatId));
+      setSaveMessage(t.boatDeleted);
+      if (editingBoatId === boatId) {
+        handleCancelBoatEdit();
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBoatLoading(false);
+    }
+  };
+
   return (
     <section className="page-center full-profile-page">
       <div className="profile-hero-shell reveal rise-in">
         <div className="profile-hero-copy">
-          <p className="eyebrow">{t.profileNav}</p>
           <h1 className="profile-page-title">{t.accountTitle}</h1>
           <p className="profile-page-subtitle">{t.accountSubtitle}</p>
         </div>
@@ -267,9 +355,43 @@ function AccountPage() {
                   <span>{boat.registration_number || "-"}</span>
                   <span>{boat.boat_type}</span>
                   <span>{formatMoney(boat.total_insured_value)}</span>
+                  <div className="boat-card-actions">
+                    <button type="button" className="header-link boat-action-btn" onClick={() => handleEditBoat(boat)}>
+                      {t.editBoat}
+                    </button>
+                    <button type="button" className="header-link boat-action-btn boat-delete-btn" onClick={() => handleDeleteBoat(boat.id)} disabled={boatLoading}>
+                      {t.removeBoat}
+                    </button>
+                  </div>
                 </div>
               )) : <div className="empty-card">{loading ? t.loadingText : t.noBoats}</div>}
             </div>
+            {editingBoatId ? (
+              <form className="boat-edit-panel" onSubmit={handleSaveBoat}>
+                <div className="section-head">
+                  <h3>{t.editBoat}</h3>
+                  <span className="section-chip">{editingBoatId}</span>
+                </div>
+                <div className="boat-edit-grid">
+                  <input className="input" type="text" placeholder={t.boatName} value={boatForm.boat_name} onChange={(e) => handleBoatFormChange("boat_name", e.target.value)} required />
+                  <input className="input" type="text" placeholder={t.boatId} value={boatForm.registration_number} onChange={(e) => handleBoatFormChange("registration_number", e.target.value)} />
+                  <select className="input" value={boatForm.boat_type} onChange={(e) => handleBoatFormChange("boat_type", e.target.value)} required>
+                    <option value="" disabled>{t.type}</option>
+                    <option value="motorboat">{t.boatTypes.motor}</option>
+                    <option value="sailboat">{t.boatTypes.sail}</option>
+                  </select>
+                  <input className="input" type="number" min="0" step="0.01" placeholder={t.amount} value={boatForm.total_insured_value} onChange={(e) => handleBoatFormChange("total_insured_value", e.target.value)} required />
+                </div>
+                <div className="boat-edit-actions">
+                  <button type="button" className="header-link boat-action-btn" onClick={handleCancelBoatEdit}>
+                    {t.cancelEdit}
+                  </button>
+                  <button type="submit" className="primary-btn strong-btn boat-save-btn" disabled={boatLoading}>
+                    {boatLoading ? t.loadingText : t.saveBoat}
+                  </button>
+                </div>
+              </form>
+            ) : null}
           </section>
 
           <section className="dashboard-panel profile-panel contract-section smooth-panel">

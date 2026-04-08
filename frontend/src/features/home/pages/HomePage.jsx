@@ -16,7 +16,6 @@ function HomePage() {
       <RevealOnScroll>
         <section className="institutional-hero">
           <div className="institutional-copy">
-            <p className="eyebrow">CASH Assurances</p>
             <h1 className="institutional-title">{t.homeTitle}</h1>
             <p className="institutional-subtitle">{t.homeSubtitle}</p>
             <div className="home-action-row">
@@ -42,7 +41,6 @@ function HomePage() {
       <RevealOnScroll delayClass="delay-1">
         <section className="institutional-split-section">
           <div className="institutional-text-panel dashboard-panel smooth-panel">
-            <p className="eyebrow">{t.homeSectionLabel}</p>
             <h2>{t.homeSectionTitle}</h2>
             <p>{t.homeSectionText}</p>
             <div className="institutional-list">
@@ -59,7 +57,6 @@ function HomePage() {
       <RevealOnScroll delayClass="delay-2">
         <section className="institutional-card-section">
           <div className="section-heading-block institutional-heading-left">
-            <p className="eyebrow">{t.quotesNav}</p>
             <h2>{t.homeQuoteTitle}</h2>
             <p>{t.homeQuoteText}</p>
           </div>

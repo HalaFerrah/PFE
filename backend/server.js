@@ -14,6 +14,7 @@ app.use('/uploads', express.static(path.join(__dirname, process.env.UPLOAD_DIR |
 app.use('/api/auth',  require('./routes/auth'));
 app.use('/api/boats', require('./routes/boats'));
 app.use('/api/devis', require('./routes/devis'));
+app.use('/api/contracts', require('./routes/contracts'));
 
 // ── Page de test ───────────────────────────────────────
 app.get('/test', (req, res) => {

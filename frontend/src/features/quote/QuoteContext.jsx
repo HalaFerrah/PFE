@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useMemo, useState } from "react";
 
 const QuoteContext = createContext(null);
 
@@ -30,15 +30,15 @@ const initialState = {
 export function QuoteProvider({ children }) {
   const [quote, setQuote] = useState(initialState);
 
-  const updateQuote = (updates) => {
+  const updateQuote = useCallback((updates) => {
     setQuote((prev) => ({ ...prev, ...updates }));
-  };
+  }, []);
 
-  const runCalculation = () => {
+  const runCalculation = useCallback(() => {
     setQuote((prev) => ({ ...prev, amount: Number(prev.amount || 0) }));
-  };
+  }, []);
 
-  const toggleGuarantee = (key) => {
+  const toggleGuarantee = useCallback((key) => {
     setQuote((prev) => {
       const nextGuarantees = prev.selectedGuarantees.includes(key)
         ? prev.selectedGuarantees.filter((item) => item !== key)
@@ -49,13 +49,16 @@ export function QuoteProvider({ children }) {
         selectedGuarantees: nextGuarantees
       };
     });
-  };
+  }, []);
 
-  const resetQuote = () => {
+  const resetQuote = useCallback(() => {
     setQuote(initialState);
-  };
+  }, []);
 
-  const value = useMemo(() => ({ quote, updateQuote, runCalculation, toggleGuarantee, resetQuote }), [quote]);
+  const value = useMemo(
+    () => ({ quote, updateQuote, runCalculation, toggleGuarantee, resetQuote }),
+    [quote, updateQuote, runCalculation, toggleGuarantee, resetQuote]
+  );
 
   return <QuoteContext.Provider value={value}>{children}</QuoteContext.Provider>;
 }

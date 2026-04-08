@@ -21,7 +21,6 @@ function AboutPage() {
       <RevealOnScroll>
         <section className="about-showcase">
           <div className="about-showcase-copy cursor-glow-card" onMouseMove={handleGlowMove}>
-            <p className="eyebrow">CASH Assurances</p>
             <h1 className="about-showcase-title">{t.aboutTitle}</h1>
             <p className="about-showcase-subtitle">{t.aboutSubtitle}</p>
             <p className="about-showcase-text">{t.aboutLead}</p>
@@ -60,12 +59,10 @@ function AboutPage() {
       <RevealOnScroll delayClass="delay-1">
         <section className="about-dual-band">
           <article className="about-story-card cursor-glow-card" onMouseMove={handleGlowMove}>
-            <p className="eyebrow">{t.aboutMissionTitle}</p>
             <h2>{t.aboutMissionTitle}</h2>
             <p>{t.aboutMissionText}</p>
           </article>
           <article className="about-story-card accent-story-card cursor-glow-card" onMouseMove={handleGlowMove}>
-            <p className="eyebrow">{t.aboutVisionTitle}</p>
             <h2>{t.aboutVisionTitle}</h2>
             <p>{t.aboutVisionText}</p>
           </article>
@@ -76,7 +73,6 @@ function AboutPage() {
         <section className="about-focus-grid compact-about-grid tiled-about-grid">
           <div className="about-tiles-column">
             <div className="about-mini-tile about-intro-tile cursor-glow-card" onMouseMove={handleGlowMove}>
-              <p className="eyebrow">{t.aboutValuesLabel}</p>
               <h2>{t.aboutValuesTitle}</h2>
               <p>{t.aboutValuesText}</p>
             </div>
