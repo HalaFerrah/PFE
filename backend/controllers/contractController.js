@@ -1,4 +1,3 @@
-// controllers/contractController.js
 const db = require('../db');
 
 // ── Coefficients durée ────────────────────────────────────────
@@ -47,24 +46,16 @@ function getCodeVal(v) { return (TRANCHES_VALEUR.find(t=>v<=t.max)||{code:10}).c
 function getCodeAge(yr) { const age=new Date().getFullYear()-yr; return (TRANCHES_AGE.find(t=>age<=t.max)||{code:4}).code; }
 function getCodeType(t) { return t==='sailboat'?2:1; }
 
-// ── Calcul du total général ────────────────────────────────────
-// Total = prime_nette_ajustée + coût_police + TVA + timbre
-// TVA   = (prime_nette_ajustée + coût_police) × 19%
-// Coût de police = 500 DA (fixe)
-// Timbre = 0 (à ajuster si besoin)
 function calcTotal(primeNette) {
   const cout_police = 500.00;
-  const timbre      = 0.00;
+  const timbre      = 120.00;
   const tva         = Math.round((primeNette + cout_police) * 0.19 * 100) / 100;
   const total       = Math.round((primeNette + cout_police + tva + timbre) * 100) / 100;
   return { cout_police, tva, timbre, total };
 }
 
-// ── Générer numéro de contrat : ID-EXERCICE ex: 7321-1 ────────
 async function generatePolicyNumber(conn) {
   const year = new Date().getFullYear();
-
-  // Incrémenter compteur exercice annuel
   await conn.execute(
     `INSERT INTO contract_counter (year, last_number) VALUES (?, 1)
      ON DUPLICATE KEY UPDATE last_number = last_number + 1`,
@@ -73,39 +64,49 @@ async function generatePolicyNumber(conn) {
   const [[counter]] = await conn.execute(
     `SELECT last_number FROM contract_counter WHERE year = ?`, [year]
   );
-  const exerciseNum = counter.last_number;
-
-  // ID global = timestamp + random pour unicité
-  const contractIdNum = Date.now() % 100000;
-  const policyNumber  = `${contractIdNum}-${exerciseNum}`;
-
-  return { contractIdNum, exerciseNum, contractYear: year, policyNumber };
+  const exerciseNum   = Number(counter.last_number);
+  const contractIdNum = Number(Date.now() % 100000);
+  const policyNumber  = String(`${contractIdNum}-${exerciseNum}`);
+  return {
+    contractIdNum,
+    exerciseNum,
+    contractYear: Number(year),
+    policyNumber,
+  };
 }
 
-// ── Calculer date de fin ──────────────────────────────────────
 function calcEndDate(startDate, duration) {
   const d = new Date(startDate);
-  if (duration === '3_months') d.setMonth(d.getMonth() + 3);
+  if (duration === '3_months')      d.setMonth(d.getMonth() + 3);
   else if (duration === '6_months') d.setMonth(d.getMonth() + 6);
-  else d.setFullYear(d.getFullYear() + 1);
+  else                              d.setFullYear(d.getFullYear() + 1);
   return d.toISOString().split('T')[0];
 }
 
 // ============================================================
 //  POST /api/contracts/create
-//  Crée un contrat après inscription et paiement
 // ============================================================
 const createContract = async (req, res) => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
 
-    const {
-      boat_id, contract_duration, start_date,
-      guarantee_codes = [], payment_method,
-    } = req.body;
+    console.log('=== REQ BODY ===', JSON.stringify(req.body));
 
-    // Vérifier que le bateau appartient à l'utilisateur
+    const boat_id           = req.body.boat_id           ? Number(req.body.boat_id) : null;
+    const contract_duration = req.body.contract_duration || '1_year';
+    const guarantee_codes   = req.body.guarantee_codes   || [];
+    const payment_method    = req.body.payment_method    || null;
+    const today             = new Date().toISOString().split('T')[0];
+    const start_date        = (req.body.start_date && req.body.start_date !== '')
+                              ? req.body.start_date
+                              : today;
+
+    if (!boat_id) {
+      await conn.rollback(); conn.release();
+      return res.status(400).json({ success: false, message: 'boat_id is required' });
+    }
+
     const [[boat]] = await conn.execute(
       `SELECT id, total_insured_value, construction_year, boat_type
        FROM boat WHERE id = ? AND user_id = ?`,
@@ -116,18 +117,16 @@ const createContract = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Boat not found' });
     }
 
-    const tiv      = parseFloat(boat.total_insured_value);
-    const coeff    = COEFF_DUREE[contract_duration] || 1;
-    const codeVal  = getCodeVal(tiv);
-    const codeAge  = getCodeAge(parseInt(boat.construction_year));
-    const codeType = getCodeType(boat.boat_type);
-    const cleTable = `${codeVal}-${codeAge}-${codeType}`;
+    const tiv        = parseFloat(boat.total_insured_value) || 0;
+    const coeff      = COEFF_DUREE[contract_duration]       || 1;
+    const codeVal    = getCodeVal(tiv);
+    const codeAge    = getCodeAge(parseInt(boat.construction_year));
+    const codeType   = getCodeType(boat.boat_type);
+    const cleTable   = `${codeVal}-${codeAge}-${codeType}`;
     const taux34141A = TAUX_34141A[cleTable] || 1.0;
 
-    // Prime principale
     const mainPremium = Math.round(tiv * taux34141A / 100 * 100) / 100;
 
-    // Primes complémentaires
     const codes = [...new Set(['34141A', ...guarantee_codes])];
     let optionsPremium = 0;
     const guaranteeLines = [];
@@ -144,16 +143,41 @@ const createContract = async (req, res) => {
       guaranteeLines.push({ code, rate: taux, premium });
     }
 
-    const totalNet   = mainPremium + optionsPremium;
-    const adjusted   = Math.round(totalNet * coeff * 100) / 100;
+    const totalNet = mainPremium + optionsPremium;
+    const adjusted = Math.round(totalNet * coeff * 100) / 100;
     const { cout_police, tva, timbre, total } = calcTotal(adjusted);
-    const end_date   = calcEndDate(start_date, contract_duration);
+    const end_date = calcEndDate(start_date, contract_duration);
 
-    // Générer numéro de contrat
     const { contractIdNum, exerciseNum, contractYear, policyNumber } =
       await generatePolicyNumber(conn);
 
-    // Insérer contrat
+    const insertValues = [
+      contractIdNum,
+      exerciseNum,
+      contractYear,
+      policyNumber,
+      Number(req.user.id),
+      boat_id,
+      contract_duration,
+      start_date,
+      end_date,
+      tiv,
+      mainPremium,
+      optionsPremium,
+      totalNet,
+      coeff,
+      adjusted,
+      cout_police,
+      0.19,
+      tva,
+      timbre,
+      total,
+      'pending',
+      payment_method,
+    ];
+
+    console.log('=== INSERT VALUES ===', insertValues);
+
     const [result] = await conn.execute(
       `INSERT INTO insurance_contract (
          contract_id_num, exercise_num, contract_year, policy_number,
@@ -163,18 +187,10 @@ const createContract = async (req, res) => {
          cout_police, tva_rate, tva_amount, timbre, total_general,
          status, payment_method
        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-      [
-        contractIdNum, exerciseNum, contractYear, policyNumber,
-        req.user.id, boat_id, contract_duration, start_date, end_date,
-        tiv, mainPremium, optionsPremium, totalNet,
-        coeff, adjusted,
-        cout_police, 0.19, tva, timbre, total,
-        'pending', payment_method || null,
-      ]
+      insertValues
     );
     const contractId = result.insertId;
 
-    // Insérer lignes garanties
     for (const g of guaranteeLines) {
       await conn.execute(
         `INSERT INTO contract_guarantee (contract_id, guarantee_code, applied_rate, calculated_premium)
@@ -190,9 +206,10 @@ const createContract = async (req, res) => {
       success: true,
       message: 'Contract created successfully',
       data: {
-        contract_id: contractId,
+        contract_id:   contractId,
         policy_number: policyNumber,
-        start_date, end_date,
+        start_date,
+        end_date,
         prime_nette:   adjusted,
         cout_police,
         tva,
@@ -209,7 +226,7 @@ const createContract = async (req, res) => {
 };
 
 // ============================================================
-//  GET /api/contracts/mine  — contrats du client connecté
+//  GET /api/contracts/mine
 // ============================================================
 const getMyContracts = async (req, res) => {
   try {
@@ -230,7 +247,7 @@ const getMyContracts = async (req, res) => {
 };
 
 // ============================================================
-//  GET /api/contracts/:id  — détail complet (client ou admin)
+//  GET /api/contracts/:id
 // ============================================================
 const getContractDetail = async (req, res) => {
   try {
@@ -250,12 +267,10 @@ const getContractDetail = async (req, res) => {
     );
     if (!contract) return res.status(404).json({ success: false, message: 'Contract not found' });
 
-    // Vérifier accès : client voit seulement ses contrats, admin voit tout
     if (req.user.role === 'client' && contract.user_id !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
 
-    // Garanties du contrat
     const [guarantees] = await db.execute(
       `SELECT cg.guarantee_code, cg.applied_rate, cg.calculated_premium,
               g.label, g.guarantee_type
@@ -272,7 +287,7 @@ const getContractDetail = async (req, res) => {
 };
 
 // ============================================================
-//  GET /api/contracts/all  — ADMIN: tous les contrats
+//  GET /api/contracts/admin/all
 // ============================================================
 const getAllContracts = async (req, res) => {
   try {
@@ -301,7 +316,7 @@ const getAllContracts = async (req, res) => {
 };
 
 // ============================================================
-//  PUT /api/contracts/:id/status  — ADMIN: modifier statut
+//  PUT /api/contracts/:id/status
 // ============================================================
 const updateContractStatus = async (req, res) => {
   try {
@@ -321,7 +336,7 @@ const updateContractStatus = async (req, res) => {
 };
 
 // ============================================================
-//  DELETE /api/contracts/:id  — ADMIN: supprimer contrat
+//  DELETE /api/contracts/:id
 // ============================================================
 const deleteContract = async (req, res) => {
   try {
@@ -333,7 +348,7 @@ const deleteContract = async (req, res) => {
 };
 
 // ============================================================
-//  GET /api/contracts/clients  — ADMIN: liste clients
+//  GET /api/contracts/admin/clients
 // ============================================================
 const getAllClients = async (req, res) => {
   try {
