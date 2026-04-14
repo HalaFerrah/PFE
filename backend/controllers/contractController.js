@@ -291,8 +291,11 @@ const getContractDetail = async (req, res) => {
 // ============================================================
 const getAllContracts = async (req, res) => {
   try {
-    const { status, page = 1, limit = 20 } = req.query;
-    const offset = (page - 1) * limit;
+    const { status } = req.query;
+    const page   = Number(req.query.page  || 1);
+    const limit  = Number(req.query.limit || 20);
+    const offset = Number((page - 1) * limit);
+
     let query = `
       SELECT ic.id, ic.policy_number, ic.start_date, ic.end_date,
              ic.total_general, ic.status, ic.created_at,
@@ -306,7 +309,7 @@ const getAllContracts = async (req, res) => {
     const params = [];
     if (status) { query += ' WHERE ic.status = ?'; params.push(status); }
     query += ` ORDER BY ic.contract_year DESC, ic.exercise_num ASC LIMIT ? OFFSET ?`;
-    params.push(parseInt(limit), offset);
+    params.push(limit, offset);
 
     const [rows] = await db.execute(query, params);
     res.json({ success: true, data: rows });
